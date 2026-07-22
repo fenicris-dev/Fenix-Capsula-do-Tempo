@@ -1,0 +1,16 @@
+{
+  "name": "Fênix Cápsula do Tempo",
+  "short_name": "Cápsula do Tempo",
+  "description": "Aportes diários forçados, com juros por atraso e mensagens reveladas ao concluir cada cápsula.",
+  "start_url": "./capsula-do-tempo.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#041273",
+  "theme_color": "#041273",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
