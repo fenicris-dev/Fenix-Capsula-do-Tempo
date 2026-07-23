@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#041273">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cápsula do Tempo">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="icon" sizes="32x32" href="./favicon-32.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Fênix Cápsula do Tempo</title>
+<style>
+  :root{
+    --fx-azul-1:#041273; --fx-azul-2:#040798; --fx-azul-3:#0076CE; --fx-dourado:#ffcb00;
+    --paper:#ffffff; --paper-dark:#eef2fb; --line:#dbe3f3;
+    --ink:#0a1440; --ink-soft:#5b6b95;
+    --brass:#0076CE; --brass-soft:#3d94dd;
+    --red:#c0392b; --red-soft:#fbe0dc;
+    --green:#1f7a4d; --green-soft:#dff2e6;
+    --shadow: 0 2px 10px rgba(4,18,115,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--paper-dark); color:var(--ink); }
+  #app{ min-height:100vh; display:flex; }
+
+  #sidebar{ width:230px; flex-shrink:0; background:linear-gradient(180deg, var(--fx-azul-1), var(--fx-azul-2)); padding:24px 0; display:flex; flex-direction:column; gap:4px; box-shadow:2px 0 10px rgba(4,18,115,.25); }
+  .brand{ font-family:-apple-system,sans-serif; font-size:18px; font-weight:800; padding:0 20px 4px 20px; color:#fff; letter-spacing:.2px; }
+  .brand .version-badge{ display:inline-block; margin-left:6px; font-size:10px; font-weight:700; background:var(--fx-dourado); color:var(--fx-azul-1); padding:2px 7px; border-radius:10px; vertical-align:middle; }
+  .brand small{ display:block; font-family:-apple-system,sans-serif; font-weight:500; font-size:10.5px; color:var(--fx-dourado); letter-spacing:1.5px; text-transform:uppercase; margin-top:4px; margin-bottom:14px; }
+  .tab{ position:relative; padding:12px 18px 12px 20px; cursor:pointer; font-size:14px; color:rgba(255,255,255,.72); border-left:3px solid transparent; transition:.15s; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .tab:hover{ background:rgba(255,255,255,.08); color:#fff; }
+  .tab.active{ background:rgba(255,255,255,.12); border-left:3px solid var(--fx-dourado); color:#fff; font-weight:600; }
+  .tab .dot{ width:7px; height:7px; border-radius:50%; background:#ff6b5e; flex-shrink:0; box-shadow:0 0 0 2px var(--fx-azul-2); }
+  .tab .pause-icon{ font-size:11px; color:rgba(255,255,255,.6); }
+  .tab .seal-icon{ font-size:12px; }
+  .sidebar-alert{ margin:2px 16px 10px 16px; padding:8px 12px; background:rgba(255,255,255,.12); border:1px solid var(--fx-dourado); border-radius:5px; color:var(--fx-dourado); font-size:12px; font-weight:700; cursor:pointer; text-align:center; }
+  .sidebar-alert:hover{ background:rgba(255,255,255,.18); }
+  .conn-status{ margin:0 16px 14px 16px; font-size:11px; font-weight:600; letter-spacing:.3px; padding:4px 0; }
+  .conn-status.status-online{ color:#5be08a; }
+  .conn-status.status-offline{ color:var(--fx-dourado); }
+  .conn-status.status-erro{ color:#ff8577; }
+  .conn-status.status-conectando{ color:rgba(255,255,255,.65); }
+  .user-pill{ margin:0 16px 14px 16px; font-size:11.5px; color:rgba(255,255,255,.72); padding-bottom:12px; border-bottom:1px dashed rgba(255,255,255,.25); word-break:break-all; }
+  .tab-new{ margin-top:10px; padding:12px 18px 12px 20px; font-size:13px; color:var(--fx-dourado); cursor:pointer; font-weight:700; border-top:1px dashed rgba(255,255,255,.25); padding-top:16px; }
+  .tab-new:hover{ color:#fff; }
+
+
+  #content{ flex:1; padding:36px 44px; max-width:960px; }
+  h1.page-title{ font-family:-apple-system,sans-serif; font-weight:800; font-size:26px; margin:0 0 4px 0; color:var(--fx-azul-1); }
+  .subtitle{ color:var(--ink-soft); font-size:14px; margin-bottom:10px; }
+
+  .card{ background:var(--paper); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow); padding:22px 24px; margin-bottom:20px; }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .field{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:160px; }
+  label{ font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); font-weight:600; }
+  input[type=text], input[type=number], input[type=date]{
+    font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:15px; padding:9px 10px;
+    border:1px solid var(--line); border-radius:4px; background:#fffdf7; color:var(--ink); width:100%;
+  }
+  input:focus{ outline:2px solid var(--brass-soft); outline-offset:1px; }
+  input:disabled{ opacity:.55; }
+
+  button{ font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; border:none; border-radius:4px; padding:10px 18px; }
+  .btn-primary{ background:linear-gradient(90deg, var(--fx-azul-1), var(--fx-azul-3)); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn-ghost:hover{ color:var(--ink); border-color:var(--ink-soft); }
+  .btn-pago{ background:var(--green); color:#fff; }
+  .btn-pago:hover{ background:#345a41; }
+  .btn-nao{ background:transparent; color:var(--red); border:1px solid var(--red-soft); }
+  .btn-nao:hover{ background:var(--red-soft); }
+  .btn-brass{ background:var(--fx-dourado); color:var(--fx-azul-1); font-weight:800; }
+  .btn-brass:hover{ filter:brightness(1.05); }
+  .link-danger{ color:var(--red); font-size:12px; cursor:pointer; text-decoration:underline; }
+
+  .mode-selector{ display:flex; gap:8px; flex-wrap:wrap; }
+  .mode-btn{ padding:9px 14px; border:1px solid var(--line); border-radius:20px; font-size:12.5px; cursor:pointer; background:#fffdf7; color:var(--ink-soft); font-weight:600; }
+  .mode-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:20px; }
+  .stat{ background:var(--paper); padding:16px 18px; }
+  .stat .label{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px; }
+  .stat .value{ font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:19px; font-weight:700; color:var(--ink); }
+  .stat .value.brass{ color:var(--brass); } .stat .value.red{ color:var(--red); } .stat .value.green{ color:var(--green); }
+
+  .progress-bar{ height:8px; background:var(--paper-dark); border-radius:4px; overflow:hidden; border:1px solid var(--line); margin-top:8px; }
+  .progress-fill{ height:100%; background:var(--brass); }
+
+  table.ledger{ width:100%; border-collapse:collapse; font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:13px; }
+  table.ledger th{ text-align:left; font-family:-apple-system,sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); padding:8px 10px; border-bottom:1px solid var(--line); }
+  table.ledger td{ padding:9px 10px; border-bottom:1px dashed var(--line); }
+  table.ledger tr:last-child td{ border-bottom:none; }
+
+  .stamp{ display:inline-block; padding:3px 9px; border:2px solid; border-radius:3px; font-family:ui-monospace,monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; transform:rotate(-3deg); }
+  .stamp.pago{ color:var(--green); border-color:var(--green); }
+  .stamp.atraso{ color:var(--red); border-color:var(--red); }
+  .stamp.pausado{ color:var(--ink-soft); border-color:var(--ink-soft); }
+
+  .checkin-item{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .checkin-item:last-child{ border-bottom:none; }
+  .checkin-info .goalname{ font-weight:700; font-size:14px; }
+  .checkin-info .datestr{ font-size:12px; color:var(--ink-soft); }
+  .checkin-info .devido{ font-family:ui-monospace,monospace; font-size:17px; font-weight:700; color:var(--red); margin-top:2px; }
+  .checkin-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .checkin-actions input[type=number]{ width:110px; }
+
+  .empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+  .empty .stamp{ transform:rotate(-6deg); margin-bottom:14px; }
+
+  .goal-card-summary{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px dashed var(--line); cursor:pointer; }
+  .goal-card-summary:last-child{ border-bottom:none; }
+  .goal-card-summary:hover .gname{ color:var(--brass); }
+  .gname{ font-weight:700; font-size:15px; }
+  .gmeta{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .gvalor{ font-family:ui-monospace,monospace; font-weight:700; font-size:16px; text-align:right; }
+
+  .banner{ background:var(--red-soft); border:1px solid var(--red); border-radius:6px; padding:12px 16px; margin-bottom:20px; color:var(--red); font-size:13px; font-weight:700; }
+  .toast{ position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--paper); padding:12px 18px; border-radius:6px; font-size:13px; box-shadow:var(--shadow); z-index:99; animation:fadein .2s; max-width:340px; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .section-title{ font-family:Georgia,'Iowan Old Style',serif; font-size:17px; margin:0 0 12px 0; }
+  .helptext{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+
+  .summary-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+  .summary-row{ display:flex; gap:12px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+  .summary-row .summary-item{ flex:1 1 0; min-width:150px; }
+  .summary-item{ background:var(--paper-dark); border:1px solid var(--line); border-radius:6px; padding:14px 16px; }
+  .summary-item.clicavel{ cursor:pointer; transition:.15s; }
+  .summary-item.clicavel:hover{ border-color:var(--brass); background:#e4ecfb; }
+  .summary-item .label{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); font-weight:600; margin-bottom:6px; }
+  .summary-item .value{ font-family:ui-monospace,monospace; font-size:20px; font-weight:700; }
+  .section-header:hover .section-title{ color:var(--brass); }
+  .onboarding-overlay{ position:fixed; inset:0; background:rgba(4,18,115,.55); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .onboarding-card{ background:#fff; border-radius:10px; max-width:520px; width:100%; padding:30px 32px; box-shadow:0 10px 40px rgba(0,0,0,.3); max-height:88vh; overflow-y:auto; }
+  .onboarding-card h2{ font-size:22px; margin:0 0 4px 0; color:var(--fx-azul-1); }
+  .onboarding-step{ display:flex; gap:12px; padding:12px 0; border-bottom:1px dashed var(--line); }
+  .onboarding-step:last-of-type{ border-bottom:none; }
+  .onboarding-step .num{ flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--fx-azul-1); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; }
+  .onboarding-step .txt{ font-size:14px; line-height:1.5; }
+
+  .chart-wrap{ overflow-x:auto; }
+  .chart-bar-label{ font-family:ui-monospace,monospace; font-size:10px; fill:var(--ink-soft); }
+
+  @media (max-width:720px){
+    #app{ flex-direction:column; } #sidebar{ width:100%; flex-direction:row; overflow-x:auto; padding:14px 8px; }
+    .brand{ display:none; } .tab-new{ border-top:none; padding-top:12px; } #content{ padding:20px; }
+  }
+
+  #print-area{ display:none; }
+  .print-header{ display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid #1b2a44; padding-bottom:10px; margin-bottom:16px; }
+  .print-brand{ font-family:Georgia,'Iowan Old Style',serif; font-size:14px; color:#5a6478; }
+  .print-title{ font-family:Georgia,'Iowan Old Style',serif; font-size:24px; margin:0; }
+  .print-meta{ font-size:12.5px; color:#333; margin-bottom:4px; }
+  .print-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid #ccc; margin:16px 0; }
+  .print-stat{ padding:10px 12px; border:1px solid #ccc; }
+  .print-stat .l{ font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:#666; }
+  .print-stat .v{ font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:16px; font-weight:700; }
+  .print-table{ width:100%; border-collapse:collapse; font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:11.5px; }
+  .print-table th, .print-table td{ border:1px solid #ccc; padding:5px 8px; text-align:left; }
+  .print-table th{ background:#eee; font-family:-apple-system,sans-serif; text-transform:uppercase; font-size:9.5px; letter-spacing:.5px; }
+  .print-footer{ margin-top:18px; font-size:10px; color:#888; }
+
+  @media print{
+    body > *{ display:none !important; }
+    #print-area{ display:block !important; }
+    #print-area *{ visibility:visible; }
+  }  .capsula-aberta{ background:linear-gradient(180deg,#fffdf7,var(--paper)); border:2px solid var(--brass); border-radius:8px; padding:28px 30px; margin-bottom:20px; position:relative; }
+  .capsula-aberta .selo{ position:absolute; top:-16px; right:24px; background:var(--brass); color:#fff; font-family:ui-monospace,monospace; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:6px 14px; border-radius:14px; box-shadow:var(--shadow); transform:rotate(3deg); }
+  .capsula-aberta h2{ font-family:Georgia,'Iowan Old Style',serif; font-size:22px; margin:6px 0 14px 0; }
+  .capsula-final-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:18px; }
+  .capsula-final-grid .item .l{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); font-weight:600; }
+  .capsula-final-grid .item .v{ font-family:ui-monospace,monospace; font-size:20px; font-weight:700; color:var(--ink); }
+  .carta{ background:#fffef9; border:1px dashed var(--brass-soft); border-radius:6px; padding:18px 20px; font-family:Georgia,'Iowan Old Style',serif; font-size:15px; line-height:1.6; color:var(--ink); white-space:pre-wrap; }
+  .carta-titulo{ font-family:-apple-system,sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--brass); font-weight:700; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar"></div>
+  <div id="content"></div>
+</div>
+<div id="print-area"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics-compat.js"></script>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Utilidades de data ----------
+  function todayStr(){ const d=new Date(); const off=d.getTimezoneOffset(); return new Date(d.getTime()-off*60000).toISOString().slice(0,10); }
+  function parseDate(s){ return new Date(s+"T00:00:00"); }
+  function daysBetween(a,b){ return Math.round((parseDate(b)-parseDate(a))/86400000); }
+  function addDays(s,n){ const d=parseDate(s); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+  function fmtDate(s){ const [y,m,d]=s.split("-"); return d+"/"+m+"/"+y; }
+  function fmtMoney(n){ return "R$ " + (Math.round(n*100)/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function minStr(a,b){ return a<b ? a : b; }
+  const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const APP_VERSION = "v2.1";
+  function fmtFracao(total, atual){ return total + "/" + atual; }
+
+  // ---------- Estado ----------
+  let state = { salarioAtual: 0, goals: [] };
+  let view = { type:"home" };
+  let viewStack = [];
+  let expandedGoalId = null;
+  let resumoExpandido = null; // null | "pendente" | "checkins"
+  let secoesAbertas = {}; // controla cards recolhíveis (home, histórico etc.)
+
+  function goTo(novaView){ viewStack.push(view); view = novaView; expandedGoalId = null; render(); }
+  function goBack(){ view = viewStack.pop() || {type:"home"}; render(); }
+  function irParaHome(){ viewStack = []; view = {type:"home"}; render(); }
+  function navegarDireto(v){ viewStack = []; view = v; expandedGoalId = null; render(); }
+
+  function toggleSecao(id){ secoesAbertas[id] = !secoesAbertas[id]; render(); }
+  function secaoRecolhivel(id, titulo, buildContentFn, extraHeaderHtml){
+    const aberta = !!secoesAbertas[id];
+    const card = el(`<div class="card"></div>`);
+    const header = el(`<div class="section-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+      <div class="section-title" style="margin:0;">${titulo}</div>
+      <div style="display:flex; align-items:center; gap:10px;">${extraHeaderHtml||''}<span style="color:var(--ink-soft); font-size:13px;">${aberta?'▲ recolher':'▼ expandir'}</span></div>
+    </div>`);
+    header.onclick = (e) => { if(e.target.closest('[data-stop]')) return; toggleSecao(id); };
+    card.appendChild(header);
+    if(aberta){
+      const content = el(`<div style="margin-top:14px;"></div>`);
+      buildContentFn(content);
+      card.appendChild(content);
+    }
+    return card;
+  }
+  let connStatus = "conectando"; // conectando | online | offline | erro
+  let lastErrorMsg = "";
+  let uid = null;
+  let currentUser = null;
+  let firstSnapshotReceived = false;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBSy7q5O8MwZ8TrcIQf24b_LLPWgj30-RA",
+    authDomain: "fenix-capsula-do-tempo.firebaseapp.com",
+    projectId: "fenix-capsula-do-tempo",
+    storageBucket: "fenix-capsula-do-tempo.firebasestorage.app",
+    messagingSenderId: "537834333383",
+    appId: "1:537834333383:web:64ce42bffb04994b1a8ae2",
+    measurementId: "G-MSCNXGRZJQ"
+  };
+
+  let db = null, auth = null;
+  function initFirebase(){
+    try{
+      if(typeof firebase === "undefined"){
+        connStatus="erro"; lastErrorMsg="O SDK do Firebase não carregou (bloqueio de rede ao script do gstatic.com). Se você está vendo isso dentro do preview do chat, teste abrindo o arquivo .html baixado direto no navegador, ou já publicado."; render(); return;
+      }
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+        console.warn("Persistência offline não habilitada:", err.code);
+      });
+      try{ firebase.analytics(); }catch(e){ console.warn("Analytics não disponível neste ambiente:", e.message); }
+      auth = firebase.auth();
+      auth.onAuthStateChanged(user=>{
+        if(user){
+          currentUser = user; uid = user.uid;
+          if(view.type==="login") view = {type:"home"};
+          attachListener();
+        } else {
+          currentUser = null; uid = null; firstSnapshotReceived = false;
+          connStatus = "conectando"; view = {type:"login"};
+          render();
+        }
+      });
+    }catch(e){
+      console.error(e); connStatus="erro"; lastErrorMsg=e.message; render();
+      showToast("Firebase indisponível — verifique sua conexão ou o SDK.");
+    }
+  }
+
+  function fazerLogin(email, senha){
+    return auth.signInWithEmailAndPassword(email, senha);
+  }
+  function criarConta(email, senha){
+    return auth.createUserWithEmailAndPassword(email, senha);
+  }
+  function loginGoogle(){
+    const provider = new firebase.auth.GoogleAuthProvider();
+    return auth.signInWithPopup(provider);
+  }
+  function resetSenha(email){
+    return auth.sendPasswordResetEmail(email);
+  }
+  function logout(){
+    auth.signOut();
+  }
+
+  function attachListener(){
+    const ref = db.collection("capsulas").doc(uid);
+    ref.onSnapshot((doc)=>{
+      if(doc.exists && doc.data().payload){
+        try{ state = JSON.parse(doc.data().payload); }catch(e){ console.error("Payload inválido", e); }
+      } else if(!doc.metadata.fromCache){
+        // primeiro acesso online: cria o documento
+        ref.set({ payload: JSON.stringify(state), atualizadoEm: new Date().toISOString() });
+      }
+      connStatus = doc.metadata.fromCache ? "offline" : "online";
+      firstSnapshotReceived = true;
+      render();
+    }, (err)=>{
+      console.error(err); connStatus="erro"; lastErrorMsg=err.code+": "+err.message; render();
+      showToast("Erro de sincronização: "+err.message);
+    });
+  }
+
+  async function saveState(){
+    render(); // atualiza a tela imediatamente com o dado local (otimista)
+    if(!uid || !db) return;
+    try{
+      await db.collection("capsulas").doc(uid).set({ payload: JSON.stringify(state), atualizadoEm: new Date().toISOString() });
+    }catch(e){
+      console.error(e);
+      showToast("Sem conexão agora — os dados ficam salvos no dispositivo e sincronizam quando a internet voltar.");
+    }
+  }
+
+  // ---------- Lógica de domínio ----------
+  function refDateFor(goal){ return goal.pausado ? goal.pausadoEm : todayStr(); }
+
+  function valorDiarioBase(goal){
+    if(goal.modo === "atrelado") return (state.salarioAtual * goal.percentual/100)/30;
+    return goal.valorFixoBase; // congelado ou fixo
+  }
+  function totalDiasPlano(goal){ return daysBetween(goal.dataInicio, goal.dataFim) + 1; }
+
+  function getPendingDates(goal){
+    const ref = refDateFor(goal);
+    const end = minStr(ref, goal.dataFim);
+    if(parseDate(end) < parseDate(goal.dataInicio)) return [];
+    const out = []; let d = goal.dataInicio;
+    while(d <= end){ if(!goal.aportes[d]) out.push(d); d = addDays(d,1); }
+    return out;
+  }
+  function congelarBaseSeNecessario(goal, dueDate){
+    if(goal.modo !== "atrelado") return;
+    if(!goal.aportesBaseCongelado) goal.aportesBaseCongelado = {};
+    if(goal.aportesBaseCongelado[dueDate] === undefined && dueDate < todayStr()){
+      goal.aportesBaseCongelado[dueDate] = valorDiarioBase(goal);
+    }
+  }
+  function devidoAtual(goal, dueDate){
+    const base = (goal.modo==="atrelado" && goal.aportesBaseCongelado && goal.aportesBaseCongelado[dueDate]!==undefined)
+      ? goal.aportesBaseCongelado[dueDate] : valorDiarioBase(goal);
+    const atraso = Math.max(0, daysBetween(dueDate, refDateFor(goal)));
+    const fator = Math.pow(1 + (goal.taxaMulta/100), atraso);
+    return { valor: base*fator, diasAtraso: atraso, base };
+  }
+  function valorAcumulado(goal){ return Object.values(goal.aportes).reduce((s,a)=>s+a.valorPago,0); }
+  function aportesFeitosCount(goal){ return Object.keys(goal.aportes).length; }
+  function tempoInvestidoDias(goal){
+    const today = todayStr();
+    if(today < goal.dataInicio) return 0;
+    return daysBetween(goal.dataInicio, minStr(today, goal.dataFim)) + 1;
+  }
+  function tempoRestanteDias(goal){
+    const today = todayStr();
+    if(today >= goal.dataFim) return 0;
+    return daysBetween(today, goal.dataFim);
+  }
+  function mesesRestantes(goal){
+    const hoje = parseDate(todayStr());
+    const fim = parseDate(goal.dataFim);
+    if(fim <= hoje) return 0;
+    let meses = (fim.getFullYear()-hoje.getFullYear())*12 + (fim.getMonth()-hoje.getMonth());
+    if(fim.getDate() < hoje.getDate()) meses--;
+    return Math.max(0, meses);
+  }
+  function tempoConclusaoLabel(goal){
+    const meses = mesesRestantes(goal);
+    if(meses >= 1) return { valor: meses, texto: meses+" "+(meses===1?"mês":"meses")+" para conclusão" };
+    const dias = tempoRestanteDias(goal);
+    return { valor: dias, texto: dias+" "+(dias===1?"dia":"dias")+" para conclusão" };
+  }
+  function projecaoFinal(goal){
+    const acumulado = valorAcumulado(goal);
+    const pend = getPendingDates(goal);
+    const valorPendente = pend.reduce((s,d)=> s + devidoAtual(goal,d).valor, 0);
+    const totalDias = totalDiasPlano(goal);
+    const today = todayStr();
+    const diasVencidos = (today < goal.dataInicio) ? 0 : (daysBetween(goal.dataInicio, minStr(today, goal.dataFim)) + 1);
+    const diasFuturos = Math.max(0, totalDias - diasVencidos);
+    const projFutura = diasFuturos * valorDiarioBase(goal);
+    return acumulado + valorPendente + projFutura;
+  }
+
+  function marcarPago(goal, dueDate, valorPago){
+    const { diasAtraso, base } = devidoAtual(goal, dueDate);
+    goal.aportes[dueDate] = { valorBase: base, valorPago: valorPago, dataPagamento: todayStr(), diasAtraso: diasAtraso };
+    if(goal.aportesBaseCongelado) delete goal.aportesBaseCongelado[dueDate];
+    saveState();
+  }
+  function quitarTodosPendentes(goal){
+    const pend = getPendingDates(goal);
+    pend.forEach(d=>{
+      congelarBaseSeNecessario(goal, d);
+      const info = devidoAtual(goal, d);
+      goal.aportes[d] = { valorBase: info.base, valorPago: info.valor, dataPagamento: todayStr(), diasAtraso: info.diasAtraso };
+      if(goal.aportesBaseCongelado) delete goal.aportesBaseCongelado[d];
+    });
+    saveState();
+    return pend.length;
+  }
+  function togglePause(goal){
+    if(!goal.pausado){ goal.pausado = true; goal.pausadoEm = todayStr(); }
+    else{
+      const diasPausado = daysBetween(goal.pausadoEm, todayStr());
+      goal.dataFim = addDays(goal.dataFim, diasPausado);
+      goal.pausado = false; goal.pausadoEm = null;
+    }
+    saveState();
+  }
+
+  // ----- Aporte manual / retroativo -----
+  function primeiraDataRegistrada(goal){
+    const keys = Object.keys(goal.aportes);
+    return keys.length ? keys.sort()[0] : null;
+  }
+  function ultimaDataRegistrada(goal){
+    const keys = Object.keys(goal.aportes);
+    return keys.length ? keys.sort().slice(-1)[0] : null;
+  }
+  function datasFuturasNaoPagas(goal){
+    const start = addDays(todayStr(),1);
+    const end = goal.dataFim;
+    const out=[]; let d=start;
+    if(parseDate(start) > parseDate(end)) return out;
+    while(d<=end){ if(!goal.aportes[d]) out.push(d); d=addDays(d,1); }
+    return out;
+  }
+  function registrarAporteExato(goal, date, valorPago, diasAtraso, valorBase){
+    goal.aportes[date] = { valorBase: valorBase, valorPago: valorPago, dataPagamento: todayStr(), diasAtraso: diasAtraso||0 };
+    if(goal.aportesBaseCongelado) delete goal.aportesBaseCongelado[date];
+  }
+  function distribuirExcedente(goal, excedente, modo, datasEscolhidas){
+    let restante = excedente;
+    let alvos;
+    if(modo==="datas") alvos = (datasEscolhidas||[]).slice().sort();
+    else if(modo==="continuar") alvos = datasFuturasNaoPagas(goal);
+    else alvos = getPendingDates(goal); // "retroceder": lacunas/atrasados, mais antigo primeiro
+    alvos.forEach(d=>{
+      if(goal.aportes[d]) return;
+      if(restante <= 0.005) return;
+      const info = devidoAtual(goal, d);
+      if(modo==="datas" || restante >= info.valor - 0.005){
+        const pagar = modo==="datas" ? Math.min(restante, info.valor) : info.valor;
+        registrarAporteExato(goal, d, pagar, info.diasAtraso, info.base);
+        restante -= pagar;
+      }
+    });
+    return Math.max(0, restante);
+  }
+
+  function isCapsulaConcluida(goal){ return aportesFeitosCount(goal) >= totalDiasPlano(goal) && getPendingDates(goal).length === 0; }
+
+  function addGoal(data){
+    const valorFixoBase = data.modo === "fixo" ? data.valorFixo : (state.salarioAtual*data.percentual/100)/30;
+    const goal = {
+      id: "g_"+Date.now(), nome:data.nome, destino:data.destino||"", mensagemFutura:data.mensagemFutura||"",
+      modo:data.modo, percentual: data.modo==="fixo" ? null : data.percentual,
+      valorFixoBase: data.modo==="atrelado" ? null : valorFixoBase,
+      taxaMulta:data.taxaMulta, dataInicio:data.dataInicio, dataFim:data.dataFim,
+      pausado:false, pausadoEm:null, aportes:{}, aportesBaseCongelado:{}, investimentos:[]
+    };
+    state.goals.push(goal); saveState(); return goal;
+  }
+  function updateGoal(goal, data){
+    goal.nome = data.nome; goal.destino = data.destino||""; goal.mensagemFutura = data.mensagemFutura||""; goal.taxaMulta = data.taxaMulta; goal.dataFim = data.dataFim;
+    goal.modo = data.modo;
+    if(data.modo === "fixo"){ goal.percentual = null; goal.valorFixoBase = data.valorFixo; }
+    else{
+      goal.percentual = data.percentual;
+      goal.valorFixoBase = data.modo==="congelado" ? (state.salarioAtual*data.percentual/100)/30 : null;
+    }
+    saveState();
+  }
+  function editarAporte(goal, dueDate, novoValor){ if(!goal.aportes[dueDate]) return; goal.aportes[dueDate].valorPago = novoValor; saveState(); }
+  function excluirAporte(goal, dueDate){ delete goal.aportes[dueDate]; saveState(); }
+
+  // ----- Investimentos (migração de capital da caixinha) -----
+  function investimentosAtivos(goal){ return (goal.investimentos||[]).filter(i=>!i.resgatado); }
+  function investimentosResgatados(goal){ return (goal.investimentos||[]).filter(i=>i.resgatado); }
+  function saldoCaixinha(goal){
+    const invs = goal.investimentos||[];
+    const totalTransferido = invs.reduce((s,i)=>s+i.valor,0);
+    const totalResgatado = invs.filter(i=>i.resgatado).reduce((s,i)=>s+i.valorResgate,0);
+    return valorAcumulado(goal) - totalTransferido + totalResgatado;
+  }
+  function valorInvestidoAtivo(goal){
+    return investimentosAtivos(goal).reduce((s,i)=> s + (i.valorAtualEstimado!=null ? i.valorAtualEstimado : i.valor), 0);
+  }
+  function patrimonioTotal(goal){ return saldoCaixinha(goal) + valorInvestidoAtivo(goal); }
+  function transferirParaInvestimento(goal, valor, destino, tipo, data, obs){
+    if(!goal.investimentos) goal.investimentos = [];
+    goal.investimentos.push({
+      id:"inv_"+Date.now(), data, valor, valorAtualEstimado: valor, ultimaAtualizacao: data,
+      destino, tipo, observacao: obs||"", resgatado:false, dataResgate:null, valorResgate:null
+    });
+    saveState();
+  }
+  function atualizarValorEstimado(goal, invId, novoValor){
+    const inv = (goal.investimentos||[]).find(i=>i.id===invId); if(!inv) return;
+    inv.valorAtualEstimado = novoValor; inv.ultimaAtualizacao = todayStr(); saveState();
+  }
+  function resgatarInvestimento(goal, invId, valorResgate){
+    const inv = (goal.investimentos||[]).find(i=>i.id===invId); if(!inv) return;
+    inv.resgatado = true; inv.dataResgate = todayStr(); inv.valorResgate = valorResgate; saveState();
+  }
+  function excluirInvestimento(goal, invId){
+    goal.investimentos = (goal.investimentos||[]).filter(i=>i.id!==invId); saveState();
+  }
+  function precisaAtualizarEsteMes(inv){
+    const ref = (inv.ultimaAtualizacao||inv.data||"").slice(0,7);
+    return ref !== todayStr().slice(0,7);
+  }
+  function investimentosPendentesDeAtualizacao(){
+    const pendentes = [];
+    state.goals.forEach(g=>{
+      investimentosAtivos(g).forEach(i=>{ if(precisaAtualizarEsteMes(i)) pendentes.push({goal:g, inv:i}); });
+    });
+    return pendentes;
+  }
+
+  function exportBackup(){
+    const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "cofre-forca-backup-"+todayStr()+".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarPDF(goal){
+    const modoLabel = goal.modo==="atrelado" ? "Atrelado ao salário mínimo" : (goal.modo==="congelado" ? "Percentual do salário, congelado" : "Valor fixo em R$");
+    const total = totalDiasPlano(goal); const feitos = aportesFeitosCount(goal); const pend = getPendingDates(goal);
+    const acumulado = valorAcumulado(goal); const proj = projecaoFinal(goal);
+    const valorHoje = goal.pausado ? null : (pend.length>0 ? devidoAtual(goal, pend[0]).valor : valorDiarioBase(goal));
+
+    let rows = "";
+    const dates = Object.keys(goal.aportes).sort().reverse();
+    dates.forEach(d=>{
+      const a = goal.aportes[d];
+      rows += `<tr><td>${fmtDate(d)}</td><td>${fmtMoney(a.valorBase)}</td><td>${a.diasAtraso}</td><td>${fmtMoney(a.valorPago)}</td><td>${a.diasAtraso>0?'Atrasado':'Pago'}</td></tr>`;
+    });
+    if(dates.length===0){ rows = '<tr><td colspan="5" style="text-align:center;color:#888;">Nenhum aporte registrado ainda.</td></tr>'; }
+
+    const html = `
+      <div class="print-header">
+        <div>
+          <div class="print-brand">Fênix Cápsula do Tempo · Relatório da cápsula</div>
+          <h1 class="print-title">${escapeHtml(goal.nome)}</h1>
+        </div>
+        <div style="text-align:right; font-size:11px; color:#666;">Emitido em ${fmtDate(todayStr())}</div>
+      </div>
+      <div class="print-meta"><b>Período:</b> ${fmtDate(goal.dataInicio)} até ${fmtDate(goal.dataFim)} ${goal.pausado?'(pausado)':''}</div>
+      <div class="print-meta"><b>Modo:</b> ${modoLabel}${goal.percentual!==null ? ' · '+goal.percentual+'%' : ''}</div>
+      <div class="print-meta"><b>Juros por dia de atraso:</b> ${goal.taxaMulta}%</div>
+      <div class="print-meta"><b>Destino do aporte:</b> ${goal.destino ? escapeHtml(goal.destino) : 'não informado'}</div>
+
+      <div class="print-stats">
+        <div class="print-stat"><div class="l">Valor de hoje</div><div class="v">${valorHoje===null?'—':fmtMoney(valorHoje)}</div></div>
+        <div class="print-stat"><div class="l">Acumulado</div><div class="v">${fmtMoney(acumulado)}</div></div>
+        <div class="print-stat"><div class="l">Projeção final (hoje)</div><div class="v">${fmtMoney(proj)}</div></div>
+        <div class="print-stat"><div class="l">Tempo investido</div><div class="v">${tempoInvestidoDias(goal)} dias</div></div>
+        <div class="print-stat"><div class="l">Para conclusão</div><div class="v">${tempoConclusaoLabel(goal).texto.replace(' para conclusão','')}</div></div>
+        <div class="print-stat"><div class="l">Aportes feitos</div><div class="v">${feitos} de ${total}</div></div>
+      </div>
+
+      <table class="print-table">
+        <thead><tr><th>Data</th><th>Valor base</th><th>Dias atraso</th><th>Valor pago</th><th>Situação</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${(goal.investimentos||[]).length>0 ? `
+      <div style="margin-top:16px;">
+        <b style="font-size:11px; text-transform:uppercase; letter-spacing:1px;">Investimentos (saldo em caixinha: ${fmtMoney(saldoCaixinha(goal))} · investido: ${fmtMoney(valorInvestidoAtivo(goal))} · patrimônio total: ${fmtMoney(patrimonioTotal(goal))})</b>
+        <table class="print-table" style="margin-top:8px;">
+          <thead><tr><th>Data</th><th>Destino</th><th>Tipo</th><th>Transferido</th><th>Valor atual/resgate</th><th>Situação</th></tr></thead>
+          <tbody>${(goal.investimentos||[]).slice().sort((a,b)=>a.data<b.data?1:-1).map(inv=>
+            `<tr><td>${fmtDate(inv.data)}</td><td>${escapeHtml(inv.destino)}</td><td>${escapeHtml(inv.tipo)}</td><td>${fmtMoney(inv.valor)}</td><td>${fmtMoney(inv.resgatado?inv.valorResgate:(inv.valorAtualEstimado!=null?inv.valorAtualEstimado:inv.valor))}</td><td>${inv.resgatado?'Resgatado':'Ativo'}</td></tr>`
+          ).join("")}</tbody>
+        </table>
+      </div>` : ''}
+      ${isCapsulaConcluida(goal) && goal.mensagemFutura ? `<div style="margin-top:16px; border:1px dashed #999; padding:12px 14px; font-family:Georgia,serif;"><b style="font-size:11px; text-transform:uppercase; letter-spacing:1px;">Mensagem revelada na conclusão</b><div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(goal.mensagemFutura)}</div></div>` : ''}
+      <div class="print-footer">Projeção final = já pago + pendências de hoje corrigidas com juros + dias futuros no valor diário atual. Estimativa baseada nos valores de hoje.</div>
+    `;
+    document.getElementById("print-area").innerHTML = html;
+    setTimeout(()=>{ window.print(); }, 80);
+  }
+
+  // ---------- Toast ----------
+  let toastTimer=null;
+  function showToast(msg){
+    let t=document.getElementById("toast"); if(t) t.remove();
+    t=document.createElement("div"); t.id="toast"; t.className="toast"; t.textContent=msg;
+    document.body.appendChild(t); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.remove(),3400);
+  }
+
+  // ---------- Render helpers ----------
+  function el(html){ const d=document.createElement("div"); d.innerHTML=html.trim(); return d.firstChild; }
+  function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+  function render(){
+    renderSidebar(); renderContent();
+    const overlayAntigo = document.getElementById("onboarding-overlay");
+    if(overlayAntigo) overlayAntigo.remove();
+    if(currentUser && firstSnapshotReceived && !state.onboardingConcluido){
+      document.body.appendChild(viewOnboarding());
+    }
+  }
+
+  function viewOnboarding(){
+    const passos = [
+      "Em <b>Início</b>, cadastre o salário mínimo atual — ele é a base para objetivos calculados em % do salário.",
+      "Clique em <b>+ Novo objetivo</b> para criar uma cápsula: escolha se o valor diário é atrelado ao salário, um percentual congelado, ou um valor fixo em R$.",
+      "Todo dia, volte em <b>Início</b> e faça o <b>check-in</b>: confirme se você fez o aporte daquele dia.",
+      "Esqueceu um dia? Sem problema — use <b>+ Novo aporte</b> para registrar retroativamente, inclusive de antes de ter criado a cápsula aqui.",
+      "Se um dia ficar em aberto, juros compostos do percentual que você definir passam a incidir sobre ele até ser pago.",
+      "Quando 100% dos aportes forem feitos, a cápsula se abre e revela a mensagem que você deixou para esse momento."
+    ];
+    const overlay = el(`<div class="onboarding-overlay" id="onboarding-overlay"></div>`);
+    const card = el(`<div class="onboarding-card">
+      <h2>Bem-vindo(a) ao Fênix Cápsula do Tempo</h2>
+      <div class="subtitle" style="margin-bottom:6px;">Um jeito de se comprometer com aportes diários — com juros de verdade se você deixar passar.</div>
+      ${passos.map((p,i)=>`<div class="onboarding-step"><div class="num">${i+1}</div><div class="txt">${p}</div></div>`).join("")}
+      <div style="margin-top:20px; text-align:right;"><button class="btn-primary" id="ob-comecar">Entendi, vamos começar</button></div>
+    </div>`);
+    overlay.appendChild(card);
+    card.querySelector("#ob-comecar").onclick = () => {
+      state.onboardingConcluido = true; saveState();
+      overlay.remove();
+    };
+    return overlay;
+  }
+
+  function renderSidebar(){
+    const sb = document.getElementById("sidebar"); sb.innerHTML="";
+    sb.appendChild(el(`<div class="brand">Fênix Cápsula do Tempo<span class="version-badge">${APP_VERSION}</span><small>Guarde hoje, revele no futuro</small></div>`));
+
+    if(!currentUser){
+      sb.appendChild(el(`<div class="conn-status status-conectando">Aguardando login...</div>`));
+      return;
+    }
+
+    const statusMap = {
+      conectando: { txt:"Conectando...", cls:"status-conectando" },
+      online: { txt:"● Online — sincronizado", cls:"status-online" },
+      offline: { txt:"● Offline — salvando no dispositivo", cls:"status-offline" },
+      erro: { txt:"● Erro de conexão", cls:"status-erro" }
+    };
+    const st = statusMap[connStatus] || statusMap.conectando;
+    sb.appendChild(el(`<div class="conn-status ${st.cls}">${st.txt}</div>`));
+    sb.appendChild(el(`<div class="user-pill" title="${escapeHtml(currentUser.email||'')}">${escapeHtml(currentUser.email||'Conta conectada')}</div>`));
+
+    const severos = state.goals.filter(g=>{ if(g.pausado) return false; const p=getPendingDates(g); return p.length>0 && devidoAtual(g,p[0]).diasAtraso>=3; });
+    if(severos.length>0){
+      const alerta = el(`<div class="sidebar-alert">⚠ ${severos.length} cápsula${severos.length>1?'s':''} em atraso</div>`);
+      alerta.onclick = () => { navegarDireto({type:"home"}); };
+      sb.appendChild(alerta);
+    }
+
+    const homeTab = el(`<div class="tab ${view.type==='home'?'active':''}">Início</div>`);
+    homeTab.onclick = () => { navegarDireto({type:"home"}); };
+    sb.appendChild(homeTab);
+
+    let objetivosMenuAberto = !!secoesAbertas["sidebar-objetivos"];
+    const menuObjetivos = el(`<div class="tab" style="font-weight:700;">
+      <span>🎯 Objetivos (${state.goals.length})</span>
+      <span style="font-size:11px; color:rgba(255,255,255,.6);">${objetivosMenuAberto?'▲':'▼'}</span>
+    </div>`);
+    menuObjetivos.onclick = () => { secoesAbertas["sidebar-objetivos"] = !objetivosMenuAberto; render(); };
+    sb.appendChild(menuObjetivos);
+
+    if(objetivosMenuAberto){
+      if(state.goals.length===0){
+        sb.appendChild(el(`<div class="tab" style="color:rgba(255,255,255,.5); cursor:default;">Nenhum objetivo ainda</div>`));
+      } else {
+        sb.appendChild(el(`<div style="padding:6px 20px 2px 20px; font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.5);">Recentes</div>`));
+        state.goals.slice(-5).reverse().forEach(g=>{
+          const active = view.type==="goal" && view.id===g.id;
+          const pend = getPendingDates(g);
+          let marcador = "";
+          if(g.pausado) marcador = '<span class="pause-icon">⏸</span>';
+          else if(isCapsulaConcluida(g)) marcador = '<span class="seal-icon" title="Cápsula concluída">🔓</span>';
+          else if(pend.length>0){ marcador = '<span class="dot" title="'+pend.length+' pendente(s)"></span>'; }
+          const tab = el(`<div class="tab ${active?'active':''}" style="padding-left:30px;"><span>${escapeHtml(g.nome)}</span>${marcador}</div>`);
+          tab.onclick = () => { navegarDireto({type:"goal", id:g.id}); };
+          sb.appendChild(tab);
+        });
+        if(state.goals.length>5){
+          const verTodos = el(`<div class="tab" style="padding-left:30px; color:var(--fx-dourado); font-size:12.5px;">Ver todos (${state.goals.length}) →</div>`);
+          verTodos.onclick = () => { secoesAbertas["objetivos"]=true; navegarDireto({type:"home"}); };
+          sb.appendChild(verTodos);
+        }
+      }
+    }
+
+    const novo = el(`<div class="tab-new">+ Novo objetivo</div>`);
+    novo.onclick = () => { navegarDireto({type:"novo"}); };
+    sb.appendChild(novo);
+
+    const novoAporte = el(`<div class="tab-new">+ Novo aporte</div>`);
+    novoAporte.onclick = () => { navegarDireto({type:"novoAporte"}); };
+    sb.appendChild(novoAporte);
+
+    const sair = el(`<div class="tab-new" style="color:var(--ink-soft); border-top:1px dashed var(--line); margin-top:auto;">Sair da conta</div>`);
+    sair.onclick = () => { if(confirm("Sair da conta?")){ logout(); } };
+    sb.appendChild(sair);
+  }
+
+  function renderContent(){
+    const c = document.getElementById("content"); c.innerHTML="";
+    if(!currentUser){ c.appendChild(viewLogin()); return; }
+    if(viewStack.length>0){
+      const voltar = el(`<div class="link-danger" style="color:var(--brass); font-size:13px; margin-bottom:14px; display:inline-block;">← Voltar</div>`);
+      voltar.onclick = goBack;
+      c.appendChild(voltar);
+    }
+    if(view.type==="home") c.appendChild(viewHome());
+    else if(view.type==="novo") c.appendChild(viewFormObjetivo(null));
+    else if(view.type==="editar") c.appendChild(viewFormObjetivo(view.id));
+    else if(view.type==="goal") c.appendChild(viewGoalDetail(view.id));
+    else if(view.type==="novoAporte") c.appendChild(viewNovoAporte());
+  }
+
+  // ----- View: Login -----
+  function viewLogin(){
+    const wrap = el(`<div style="max-width:420px; margin:40px auto 0 auto;"></div>`);
+    wrap.appendChild(el(`<h1 class="page-title" style="text-align:center;">Fênix Cápsula do Tempo</h1><div class="subtitle" style="text-align:center;">Entre para acessar suas cápsulas em qualquer aparelho.</div>`));
+
+    const card = el(`<div class="card">
+      <div id="login-erro" class="helptext" style="color:var(--red); display:none; margin-bottom:10px;"></div>
+      <div class="field" style="margin-bottom:12px;"><label>E-mail</label><input type="text" id="li-email" placeholder="voce@email.com"></div>
+      <div class="field" style="margin-bottom:6px;"><label>Senha</label><input type="text" id="li-senha" placeholder="Sua senha" style="font-family:inherit;" autocomplete="current-password"></div>
+      <div style="text-align:right; margin-bottom:14px;"><span class="link-danger" id="li-esqueci" style="color:var(--ink-soft);">esqueci minha senha</span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" id="li-entrar" style="flex:1;">Entrar</button>
+        <button class="btn-ghost" id="li-criar" style="flex:1;">Criar conta</button>
+      </div>
+      <div style="text-align:center; margin:16px 0; color:var(--ink-soft); font-size:12px;">— ou —</div>
+      <button class="btn-ghost" id="li-google" style="width:100%;">Entrar com Google</button>
+    </div>`);
+
+    const emailInput = card.querySelector("#li-email");
+    const senhaInput = card.querySelector("#li-senha");
+    const erroBox = card.querySelector("#login-erro");
+    function mostrarErro(msg){ erroBox.textContent = msg; erroBox.style.display = "block"; }
+
+    card.querySelector("#li-entrar").onclick = () => {
+      const email = emailInput.value.trim(), senha = senhaInput.value;
+      if(!email || !senha){ mostrarErro("Preencha e-mail e senha."); return; }
+      erroBox.style.display="none";
+      fazerLogin(email, senha).catch(err=> mostrarErro(traduzErroAuth(err)));
+    };
+    card.querySelector("#li-criar").onclick = () => {
+      const email = emailInput.value.trim(), senha = senhaInput.value;
+      if(!email || !senha){ mostrarErro("Preencha e-mail e senha para criar a conta."); return; }
+      if(senha.length<6){ mostrarErro("A senha precisa ter pelo menos 6 caracteres."); return; }
+      erroBox.style.display="none";
+      criarConta(email, senha).catch(err=> mostrarErro(traduzErroAuth(err)));
+    };
+    card.querySelector("#li-google").onclick = () => {
+      erroBox.style.display="none";
+      loginGoogle().catch(err=> mostrarErro(traduzErroAuth(err)));
+    };
+    card.querySelector("#li-esqueci").onclick = () => {
+      const email = emailInput.value.trim();
+      if(!email){ mostrarErro("Digite seu e-mail no campo acima primeiro."); return; }
+      resetSenha(email).then(()=> showToast("E-mail de redefinição enviado para "+email+".")).catch(err=> mostrarErro(traduzErroAuth(err)));
+    };
+
+    if(connStatus==="erro"){
+      wrap.appendChild(el(`<div class="banner">⚠ Problema para carregar o Firebase.${lastErrorMsg ? ' Detalhe: '+escapeHtml(lastErrorMsg) : ''}</div>`));
+    }
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  function traduzErroAuth(err){
+    const map = {
+      "auth/invalid-email": "E-mail inválido.",
+      "auth/user-not-found": "Não existe conta com esse e-mail. Clique em 'Criar conta'.",
+      "auth/wrong-password": "Senha incorreta.",
+      "auth/invalid-credential": "E-mail ou senha incorretos.",
+      "auth/email-already-in-use": "Já existe uma conta com esse e-mail. Clique em 'Entrar'.",
+      "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+      "auth/popup-closed-by-user": "Janela do Google fechada antes de concluir o login.",
+      "auth/network-request-failed": "Falha de rede ao contatar o Firebase."
+    };
+    return map[err.code] || (err.code ? err.code+": "+err.message : err.message);
+  }
+
+  // ----- Item de check-in reutilizável -----
+  function renderCheckinItem(goal, dueDate){
+    const info = devidoAtual(goal, dueDate);
+    const item = el(`<div class="checkin-item">
+      <div class="checkin-info">
+        <div class="goalname">${escapeHtml(goal.nome)}</div>
+        <div class="datestr">Aporte de ${fmtDate(dueDate)}${info.diasAtraso>0 ? ' · '+info.diasAtraso+' dia(s) de atraso, juros de '+goal.taxaMulta+'%/dia aplicados' : ''}</div>
+        <div class="devido">${fmtMoney(info.valor)}</div>
+      </div>
+      <div class="checkin-actions">
+        <input type="number" step="0.01" value="${info.valor.toFixed(2)}" class="input-valor-pago">
+        <button class="btn-pago">Paguei</button>
+        <button class="btn-nao">Ainda não fiz</button>
+      </div>
+    </div>`);
+    item.querySelector(".btn-pago").onclick = () => {
+      const v = parseFloat(item.querySelector(".input-valor-pago").value);
+      if(isNaN(v)||v<=0){ showToast("Informe um valor válido."); return; }
+      marcarPago(goal, dueDate, v); showToast("Aporte registrado. Bom trabalho."); render();
+    };
+    item.querySelector(".btn-nao").onclick = () => {
+      showToast("Ok. Se continuar em aberto, amanhã incidem "+goal.taxaMulta+"% de juros sobre este valor.");
+    };
+    return item;
+  }
+
+  // ----- View: Home -----
+  function viewHome(){
+    const wrap = el(`<div></div>`);
+    wrap.appendChild(el(`<h1 class="page-title">Início</h1><div class="subtitle">Salário-base, resumo geral e check-in dos seus objetivos.</div>`));
+
+    if(!firstSnapshotReceived && connStatus==="conectando"){
+      wrap.appendChild(el(`<div class="banner" style="background:var(--paper-dark); border-color:var(--line); color:var(--ink-soft);">Conectando ao Firebase e carregando seus dados...</div>`));
+    }
+    if(connStatus==="erro"){
+      wrap.appendChild(el(`<div class="banner">⚠ Não foi possível conectar ao Firebase agora.${lastErrorMsg ? ' Detalhe: '+escapeHtml(lastErrorMsg) : ''} Os dados que você já tinha carregado continuam disponíveis para consulta.</div>`));
+    }
+
+    // Alerta de atraso severo
+    const severos = state.goals.filter(g=>{ const p=getPendingDates(g); return p.length>0 && !g.pausado && devidoAtual(g,p[0]).diasAtraso>=3; });
+    if(severos.length>0){
+      wrap.appendChild(el(`<div class="banner">⚠ Atenção: ${severos.map(g=>escapeHtml(g.nome)).join(", ")} ${severos.length>1?'estão':'está'} com 3+ dias de atraso e os juros compostos já estão pesando. Vale quitar isso o quanto antes.</div>`));
+    }
+
+    // Lembrete mensal: atualizar valor real dos investimentos
+    const investPendentes = investimentosPendentesDeAtualizacao();
+    if(investPendentes.length>0){
+      const banner = el(`<div class="banner" style="background:#faf1de; border-color:var(--fx-dourado); color:#7a5c1e;">
+        📅 Está na hora de atualizar o valor real ${investPendentes.length>1?'dos seus investimentos':'do seu investimento'} (lucro ou prejuízo) — ${investPendentes.length} pendente(s) esse mês.
+        <span class="link-danger" style="color:var(--fx-azul-1); margin-left:6px;" id="ir-atualizar-invest">atualizar agora</span>
+      </div>`);
+      banner.querySelector("#ir-atualizar-invest").onclick = () => goTo({type:"goal", id:investPendentes[0].goal.id});
+      wrap.appendChild(banner);
+    }
+
+    // valores padrão de abertura: se salário ainda não foi definido, abre essa seção automaticamente
+    if(state.salarioAtual<=0 && secoesAbertas.salario===undefined) secoesAbertas.salario = true;
+
+    // Card salário (recolhível)
+    const salCard = secaoRecolhivel("salario", "Salário mínimo atual", (content)=>{
+      content.innerHTML = `
+        <div class="row"><div class="field"><label>Valor do salário</label>
+          <input type="number" id="input-salario" step="0.01" value="${state.salarioAtual||''}" placeholder="Ex: 1518.00"></div></div>
+        <div id="salario-dia-ref" style="margin-top:10px; font-family:ui-monospace,monospace; font-size:15px; color:var(--brass); font-weight:700;">${state.salarioAtual>0 ? 'Salário por dia (÷30): '+fmtMoney(state.salarioAtual/30) : ''}</div>
+        <div class="helptext">Objetivos no modo "atrelado" recalculam automaticamente os próximos aportes quando você atualiza este valor.</div>
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-primary" id="btn-salvar-salario">Salvar salário</button>
+          <button class="btn-ghost" id="btn-backup">Exportar backup (.json)</button>
+          <button class="btn-ghost" id="btn-importar">Importar backup (.json)</button>
+          <input type="file" id="input-importar" accept="application/json" style="display:none;">
+        </div>`;
+      const salInput = content.querySelector("#input-salario");
+      const salRef = content.querySelector("#salario-dia-ref");
+      salInput.oninput = () => { const v=parseFloat(salInput.value); salRef.textContent = (!isNaN(v)&&v>0) ? "Salário por dia (÷30): "+fmtMoney(v/30) : ""; };
+      content.querySelector("#btn-salvar-salario").onclick = () => {
+        const v = parseFloat(salInput.value);
+        if(isNaN(v)||v<=0){ showToast("Informe um valor de salário válido."); return; }
+        state.salarioAtual = v; saveState();
+        showToast("Salário atualizado. Aportes futuros de objetivos atrelados foram recalculados.");
+        render();
+      };
+      content.querySelector("#btn-backup").onclick = exportBackup;
+      const fileInput = content.querySelector("#input-importar");
+      content.querySelector("#btn-importar").onclick = () => fileInput.click();
+      fileInput.onchange = () => {
+        const file = fileInput.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try{
+            const novo = JSON.parse(reader.result);
+            if(!novo || typeof novo.salarioAtual!=="number" || !Array.isArray(novo.goals)) throw new Error("formato inválido");
+            if(confirm("Importar este backup vai substituir todos os dados atuais (salário e cápsulas). Continuar?")){
+              state = novo; saveState(); showToast("Backup importado e sincronizado."); render();
+            }
+          }catch(e){ showToast("Arquivo inválido — verifique se é um backup exportado por este app."); }
+        };
+        reader.readAsText(file);
+        fileInput.value = "";
+      };
+    });
+    wrap.appendChild(salCard);
+
+    // Resumo geral consolidado (recolhível, linha única, com drill-down)
+    if(state.goals.length>0){
+      let totalAcumulado=0, totalPendente=0, totalProjecao=0, checkinsAbertos=0;
+      const goalsComPendencia = [];
+      state.goals.forEach(g=>{
+        totalAcumulado += valorAcumulado(g);
+        const pend = getPendingDates(g);
+        if(pend.length>0 && !g.pausado){ checkinsAbertos++; goalsComPendencia.push(g); }
+        totalPendente += pend.reduce((s,d)=>s+devidoAtual(g,d).valor,0);
+        totalProjecao += projecaoFinal(g);
+      });
+      const resumo = secaoRecolhivel("resumo", "Resumo geral", (content)=>{
+        content.innerHTML = `
+          <div class="summary-row">
+            <div class="summary-item"><div class="label">Acumulado (todos)</div><div class="value" style="color:var(--green);">${fmtMoney(totalAcumulado)}</div></div>
+            <div class="summary-item clicavel" data-drill="pendente"><div class="label">Pendente agora (c/ juros)</div><div class="value" style="color:var(--red);">${fmtMoney(totalPendente)}</div></div>
+            <div class="summary-item"><div class="label">Projeção final somada</div><div class="value" style="color:var(--brass);">${fmtMoney(totalProjecao)}</div></div>
+            <div class="summary-item clicavel" data-drill="checkins"><div class="label">Check-ins em aberto (Total/Atual)</div><div class="value">${fmtFracao(state.goals.length, checkinsAbertos)}</div></div>
+            <div class="summary-item"><div class="label">Objetivo(s)</div><div class="value" style="color:var(--fx-azul-1);">${state.goals.length}</div></div>
+          </div>
+          <div class="helptext" style="margin-top:10px;">Projeção final = já pago + pendências de hoje corrigidas + dias futuros no valor diário atual de cada objetivo. Clique em "Pendente agora" ou "Check-ins em aberto" para ver quais objetivos precisam de atenção.</div>
+          <div id="resumo-drill"></div>
+        `;
+        content.querySelectorAll("[data-drill]").forEach(elx=>{
+          elx.onclick = () => { resumoExpandido = (resumoExpandido===elx.dataset.drill) ? null : elx.dataset.drill; render(); };
+        });
+        if(resumoExpandido){
+          const drillBox = content.querySelector("#resumo-drill");
+          if(goalsComPendencia.length===0){
+            drillBox.innerHTML = '<div class="helptext" style="margin-top:10px;">Nenhum objetivo com pendência no momento. 🎉</div>';
+          } else {
+            let html = '<div style="margin-top:12px; border-top:1px dashed var(--line); padding-top:10px;"><div class="section-title" style="font-size:14px;">Objetivos com pendência</div></div>';
+            drillBox.innerHTML = html;
+            goalsComPendencia.forEach(g=>{
+              const pend = getPendingDates(g);
+              const info = devidoAtual(g, pend[0]);
+              const linha = el(`<div class="goal-card-summary" style="padding:10px 0;">
+                <div><div class="gname" style="font-size:14px;">${escapeHtml(g.nome)}</div>
+                <div class="gmeta">${fmtFracao(pend.length, 1)} pendente(s) desde ${fmtDate(pend[0])}${info.diasAtraso>0?' · '+info.diasAtraso+' dia(s) de atraso':''}</div></div>
+                <div class="gvalor" style="color:var(--red);">${fmtMoney(pend.reduce((s,d)=>s+devidoAtual(g,d).valor,0))}</div>
+              </div>`);
+              linha.onclick = () => goTo({type:"goal", id:g.id});
+              drillBox.appendChild(linha);
+            });
+          }
+        }
+      }, viewStack.length===0 ? '' : '');
+      wrap.appendChild(resumo);
+    }
+
+    // Check-in pendente de todos (recolhível)
+    let pendingAny = [];
+    state.goals.forEach(g=>{ if(g.pausado) return; const pend=getPendingDates(g); if(pend.length>0){ congelarBaseSeNecessario(g,pend[0]); pendingAny.push({goal:g, date:pend[0], total:pend.length}); } });
+    if(pendingAny.length>0){
+      const card = secaoRecolhivel("checkin", "Check-in de hoje ("+fmtFracao(state.goals.length, pendingAny.length)+")", (content)=>{
+        pendingAny.forEach(p=>{
+          content.appendChild(renderCheckinItem(p.goal, p.date));
+          if(p.total>1){
+            const linha = el(`<div class="helptext">+ ${p.total-1} dia(s) mais antigos pendentes. <span class="link-danger" style="color:var(--brass);">quitar todos agora</span></div>`);
+            linha.querySelector(".link-danger").onclick = () => {
+              const total = getPendingDates(p.goal).reduce((s,d)=>s+devidoAtual(p.goal,d).valor,0);
+              if(confirm("Quitar "+p.total+" aporte(s) pendente(s) de '"+p.goal.nome+"' agora, totalizando "+fmtMoney(total)+"?")){
+                quitarTodosPendentes(p.goal); showToast("Pendências quitadas."); render();
+              }
+            };
+            content.appendChild(linha);
+          }
+        });
+      });
+      wrap.appendChild(card);
+    }
+
+    // Lista de objetivos (recolhível)
+    const listCard = secaoRecolhivel("objetivos", "Seus objetivos ("+state.goals.length+")", (listContent)=>{
+    if(state.goals.length===0){
+      listContent.appendChild(el(`<div class="empty"><div class="stamp pago">Página em branco</div><div>Você ainda não tem nenhum objetivo cadastrado.</div></div>`));
+    } else {
+      state.goals.forEach(g=>{
+        const total = totalDiasPlano(g); const feitos = aportesFeitosCount(g); const pend = getPendingDates(g);
+        let valorHoje;
+        if(g.pausado){ valorHoje = null; }
+        else if(pend.length>0){ congelarBaseSeNecessario(g,pend[0]); valorHoje = devidoAtual(g,pend[0]).valor; }
+        else valorHoje = valorDiarioBase(g);
+        const expandido = expandedGoalId === g.id;
+        const row = el(`<div class="goal-card-summary" style="${expandido?'border-bottom:none; padding-bottom:8px;':''}">
+          <div>
+            <div class="gname">${escapeHtml(g.nome)}${g.pausado?' <span class="stamp pausado" style="transform:none;">Pausado</span>':''}${(!g.pausado && isCapsulaConcluida(g))?' <span class="stamp pago" style="transform:none;">🔓 Concluída</span>':''}</div>
+            <div class="gmeta">${fmtDate(g.dataInicio)} → ${fmtDate(g.dataFim)} · ${fmtFracao(total,feitos)} aportes (total/atual)${g.destino?' · destino: '+escapeHtml(g.destino):''}</div>
+            <div class="progress-bar" style="width:220px;"><div class="progress-fill" style="width:${Math.min(100,(feitos/total*100))}%"></div></div>
+          </div>
+          <div class="gvalor">${g.pausado ? '—' : fmtMoney(valorHoje) + (pend.length>0?' <span style="color:var(--red);font-size:11px;">pendente</span>':'')} <span style="font-size:11px; color:var(--ink-soft); font-weight:400;">${expandido?'▲':'▼'}</span></div>
+        </div>`);
+        row.onclick = () => { expandedGoalId = expandido ? null : g.id; render(); };
+        listContent.appendChild(row);
+
+        if(expandido){
+          const faltamAportes = Math.max(0, total-feitos);
+          const faltamValor = Math.max(0, projecaoFinal(g) - valorAcumulado(g));
+          const conclHome = tempoConclusaoLabel(g);
+          const painel = el(`<div style="padding:0 0 18px 0; border-bottom:1px dashed var(--line);">
+            <div class="summary-row" style="margin-bottom:12px;">
+              <div class="summary-item"><div class="label">Acumulado até hoje</div><div class="value" style="color:var(--green);">${fmtMoney(valorAcumulado(g))}</div></div>
+              <div class="summary-item"><div class="label">Aportes que faltam</div><div class="value">${faltamAportes}</div></div>
+              <div class="summary-item"><div class="label">Falta em R$ (estimado)</div><div class="value" style="color:var(--red);">${fmtMoney(faltamValor)}</div></div>
+              <div class="summary-item"><div class="label">Projeção final</div><div class="value" style="color:var(--brass);">${fmtMoney(projecaoFinal(g))}</div></div>
+              <div class="summary-item"><div class="label">Para conclusão</div><div class="value">${conclHome.texto.replace(' para conclusão','')}</div></div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn-primary" data-act="abrir">Abrir cápsula completa</button>
+              <button class="btn-ghost" data-act="pdf">Exportar PDF</button>
+            </div>
+          </div>`);
+          painel.querySelector('[data-act="abrir"]').onclick = (e) => { e.stopPropagation(); navegarDireto({type:"goal", id:g.id}); };
+          painel.querySelector('[data-act="pdf"]').onclick = (e) => { e.stopPropagation(); exportarPDF(g); };
+          listContent.appendChild(painel);
+        }
+      });
+    }
+    });
+    wrap.appendChild(listCard);
+    return wrap;
+  }
+
+  // ----- View: Formulário (Novo / Editar) -----
+  function viewFormObjetivo(editId){
+    const editing = !!editId;
+    const g = editing ? state.goals.find(x=>x.id===editId) : null;
+    const wrap = el(`<div></div>`);
+    wrap.appendChild(el(`<h1 class="page-title">${editing?'Editar objetivo':'Novo objetivo'}</h1><div class="subtitle">${editing?'A data de início e o histórico já registrado não são alterados por aqui.':'Defina as regras do seu aporte diário.'}</div>`));
+
+    const modoInicial = editing ? g.modo : "atrelado";
+    const card = el(`<div class="card">
+      <div class="row"><div class="field" style="flex:2;"><label>Nome do objetivo</label>
+        <input type="text" id="f-nome" value="${editing?escapeHtml(g.nome):''}" placeholder="Ex: Reserva de emergência"></div></div>
+      <div class="row" style="margin-top:14px;"><div class="field" style="flex:2;"><label>Destino do aporte</label>
+        <input type="text" id="f-destino" value="${editing?escapeHtml(g.destino||''):''}" placeholder="Ex: Poupança Nubank, CDB Banco X, corretora..."></div></div>
+
+      <div class="row" style="margin-top:14px;"><div class="field" style="flex:2;">
+        <label>Mensagem para o futuro (opcional)</label>
+        <textarea id="f-mensagem" rows="3" placeholder="Por que você está guardando isso? O que pretende fazer com o valor? Essa mensagem só aparece quando a cápsula for concluída." style="font-family:-apple-system,sans-serif; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:4px; background:#fffdf7; color:var(--ink); resize:vertical;">${editing?escapeHtml(g.mensagemFutura||''):''}</textarea>
+        <div class="helptext">Fica "lacrada" e só é revelada na tela de conclusão, quando todos os aportes forem pagos.</div>
+      </div></div>
+
+      <div class="row" style="margin-top:14px;"><div class="field" style="flex:2;">
+        <label>Como o valor diário é definido?</label>
+        <div class="mode-selector">
+          <div class="mode-btn" data-modo="atrelado">Atrelado ao salário (%)</div>
+          <div class="mode-btn" data-modo="congelado">% do salário, congelado</div>
+          <div class="mode-btn" data-modo="fixo">Valor fixo em R$</div>
+        </div>
+      </div></div>
+
+      <div id="aviso-recongelar" class="banner" style="display:none; background:#faf1de; border-color:var(--brass); color:#7a5c1e;"></div>
+
+      <div class="row" id="row-percentual" style="margin-top:14px;">
+        <div class="field"><label>Percentual do salário (%)</label>
+          <input type="number" id="f-percentual" step="0.01" value="${editing&&g.percentual!==null?g.percentual:''}" placeholder="Ex: 5"></div>
+        <div class="field"><label>Juros por dia de atraso (%)</label>
+          <input type="number" id="f-taxa" step="0.01" value="${editing?g.taxaMulta:10}"></div>
+      </div>
+      <div class="row" id="row-fixo" style="margin-top:14px; display:none;">
+        <div class="field"><label>Valor fixo do aporte diário (R$)</label>
+          <input type="number" id="f-valorfixo" step="0.01" value="${editing&&g.modo==='fixo'?g.valorFixoBase:''}" placeholder="Ex: 15.00"></div>
+        <div class="field"><label>Juros por dia de atraso (%)</label>
+          <input type="number" id="f-taxa-fixo" step="0.01" value="${editing?g.taxaMulta:10}"></div>
+      </div>
+
+      <div class="card" id="f-preview-box" style="margin-top:14px; background:var(--paper-dark); box-shadow:none;"></div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="field"><label>Data de início${editing?' (fixa)':''}</label>
+          <input type="date" id="f-inicio" value="${editing?g.dataInicio:todayStr()}" ${editing?'disabled':''}></div>
+        <div class="field"><label>Data final</label>
+          <input type="date" id="f-fim" value="${editing?g.dataFim:''}"></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <span class="link-danger" id="f-calc-idade-toggle" style="color:var(--ink-soft);">Não sabe a data exata? Calcular pela idade de alguém</span>
+        <div id="f-calc-idade-box" style="display:none; margin-top:12px; background:var(--paper-dark); border:1px solid var(--line); border-radius:6px; padding:14px 16px;">
+          <div class="helptext" style="margin-bottom:10px;">Informe o dia e mês de aniversário da pessoa, a idade atual dela, e a idade que você quer comemorar — a gente calcula o ano de nascimento e a data exata.</div>
+          <div class="row">
+            <div class="field"><label>Dia</label><input type="number" id="ci-dia" min="1" max="31" placeholder="Ex: 15"></div>
+            <div class="field"><label>Mês</label><input type="number" id="ci-mes" min="1" max="12" placeholder="Ex: 4"></div>
+            <div class="field"><label>Idade atual</label><input type="number" id="ci-idade-atual" min="0" placeholder="Ex: 77"></div>
+            <div class="field"><label>Idade a comemorar</label><input type="number" id="ci-idade-alvo" min="0" placeholder="Ex: 80"></div>
+          </div>
+          <div id="ci-resultado" class="helptext" style="margin-top:10px;"></div>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="ci-aplicar">Calcular e preencher data final</button></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button class="btn-primary" id="btn-salvar">${editing?'Salvar alterações':'Criar objetivo'}</button>
+        <button class="btn-ghost" id="btn-cancelar">Cancelar</button>
+      </div>
+    </div>`);
+
+    let modoAtual = modoInicial;
+
+    // Calculadora de data-alvo por idade (ex.: aniversário de 80 anos)
+    const calcToggle = card.querySelector("#f-calc-idade-toggle");
+    const calcBox = card.querySelector("#f-calc-idade-box");
+    calcToggle.onclick = () => { calcBox.style.display = calcBox.style.display==="none" ? "block" : "none"; };
+    const ciDia = card.querySelector("#ci-dia"), ciMes = card.querySelector("#ci-mes");
+    const ciIdadeAtual = card.querySelector("#ci-idade-atual"), ciIdadeAlvo = card.querySelector("#ci-idade-alvo");
+    const ciResultado = card.querySelector("#ci-resultado");
+    function calcularDataAniversario(dia, mes, idadeAtual, idadeAlvo){
+      const hoje = parseDate(todayStr());
+      const anoAtual = hoje.getFullYear();
+      const candidata = new Date(anoAtual, mes-1, dia);
+      const jaFezEsteAno = candidata <= hoje;
+      const anoNascimento = anoAtual - idadeAtual - (jaFezEsteAno ? 0 : 1);
+      const anoAlvo = anoNascimento + idadeAlvo;
+      const mm = String(mes).padStart(2,"0"), dd = String(dia).padStart(2,"0");
+      return { anoNascimento, dataAlvo: anoAlvo+"-"+mm+"-"+dd };
+    }
+    card.querySelector("#ci-aplicar").onclick = () => {
+      const dia = parseInt(ciDia.value,10), mes = parseInt(ciMes.value,10);
+      const idadeAtual = parseInt(ciIdadeAtual.value,10), idadeAlvo = parseInt(ciIdadeAlvo.value,10);
+      if(!dia||!mes||dia<1||dia>31||mes<1||mes>12){ ciResultado.innerHTML = "⚠ Informe um dia e mês válidos."; return; }
+      if(isNaN(idadeAtual)||isNaN(idadeAlvo)){ ciResultado.innerHTML = "⚠ Informe a idade atual e a idade a comemorar."; return; }
+      if(idadeAlvo < idadeAtual){ ciResultado.innerHTML = "⚠ A idade a comemorar precisa ser igual ou maior que a idade atual."; return; }
+      const { anoNascimento, dataAlvo } = calcularDataAniversario(dia, mes, idadeAtual, idadeAlvo);
+      if(dataAlvo <= todayStr()){ ciResultado.innerHTML = "⚠ Essa data já passou (nascimento estimado em "+anoNascimento+"). Confira a idade atual informada."; return; }
+      fimInput.value = dataAlvo;
+      ciResultado.innerHTML = "Nascimento estimado em <b>"+anoNascimento+"</b>. Data final preenchida: <b>"+fmtDate(dataAlvo)+"</b> (quando completa "+idadeAlvo+" anos).";
+      updatePreview();
+    };
+    const percentualInput = card.querySelector("#f-percentual");
+    const taxaInput = card.querySelector("#f-taxa");
+    const valorFixoInput = card.querySelector("#f-valorfixo");
+    const taxaFixoInput = card.querySelector("#f-taxa-fixo");
+    const inicioInput = card.querySelector("#f-inicio");
+    const fimInput = card.querySelector("#f-fim");
+    const previewBox = card.querySelector("#f-preview-box");
+    const rowPercentual = card.querySelector("#row-percentual");
+    const rowFixo = card.querySelector("#row-fixo");
+    const avisoRecongelar = card.querySelector("#aviso-recongelar");
+    const mensagemInput = card.querySelector("#f-mensagem");
+
+    function setModo(m){
+      modoAtual = m;
+      card.querySelectorAll(".mode-btn").forEach(b=> b.classList.toggle("active", b.dataset.modo===m));
+      rowPercentual.style.display = (m==="atrelado"||m==="congelado") ? "flex" : "none";
+      rowFixo.style.display = (m==="fixo") ? "flex" : "none";
+      if(editing && m==="congelado"){
+        const valorAntigo = g.modo==="congelado" ? g.valorFixoBase : null;
+        avisoRecongelar.style.display = "block";
+        avisoRecongelar.innerHTML = "⚠ Salvar aqui recalcula o valor fixo com o salário de hoje ("+fmtMoney(state.salarioAtual)+")"+(valorAntigo!==null?", substituindo o valor congelado anterior de "+fmtMoney(valorAntigo)+"/dia":"")+".";
+      } else {
+        avisoRecongelar.style.display = "none";
+      }
+      updatePreview();
+    }
+    card.querySelectorAll(".mode-btn").forEach(b=> b.onclick = () => setModo(b.dataset.modo));
+
+    function updatePreview(){
+      let diario = null, formula = "";
+      if(modoAtual==="fixo"){
+        const v = parseFloat(valorFixoInput.value);
+        if(!isNaN(v) && v>0){ diario = v; formula = "valor fixo definido por você, sem relação com o salário"; }
+      } else {
+        const p = parseFloat(percentualInput.value);
+        if(state.salarioAtual<=0){ previewBox.innerHTML = '<div class="helptext">Cadastre o salário atual na tela de Início antes de criar o objetivo.</div>'; return; }
+        if(!isNaN(p) && p>0){
+          diario = (state.salarioAtual*p/100)/30;
+          formula = "salário " + fmtMoney(state.salarioAtual) + " ÷ 30 × " + p + "%" + (modoAtual==="congelado" ? " (congelado hoje, não muda mais)" : " (recalcula se o salário mudar)");
+        }
+      }
+      if(diario===null){ previewBox.innerHTML = '<div class="helptext">Informe o valor para ver a projeção do aporte diário.</div>'; return; }
+      const diasPlano = (inicioInput.value && fimInput.value && fimInput.value > inicioInput.value) ? daysBetween(inicioInput.value, fimInput.value)+1 : null;
+      let html = '<div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-soft);font-weight:600;">Valor do aporte diário</div>';
+      html += '<div style="font-family:ui-monospace,monospace;font-size:26px;font-weight:700;color:var(--brass);margin:4px 0 8px 0;">'+fmtMoney(diario)+' / dia</div>';
+      html += '<div class="helptext">= '+formula+'</div>';
+      html += '<div class="helptext">Isso equivale a ~'+fmtMoney(diario*30)+'/mês'+(diasPlano ? ' e a '+fmtMoney(diario*diasPlano)+' ao final do período ('+diasPlano+' dias), se tudo for pago em dia.' : '.')+'</div>';
+      previewBox.innerHTML = html;
+    }
+    percentualInput.oninput = updatePreview;
+    valorFixoInput.oninput = updatePreview;
+    inicioInput.oninput = updatePreview;
+    fimInput.oninput = updatePreview;
+    setModo(modoInicial);
+
+    card.querySelector("#btn-cancelar").onclick = () => { view = editing? {type:"goal", id:editId} : {type:"home"}; render(); };
+    card.querySelector("#btn-salvar").onclick = () => {
+      const nome = card.querySelector("#f-nome").value.trim();
+      const destino = card.querySelector("#f-destino").value.trim();
+      const inicio = inicioInput.value, fim = fimInput.value;
+      if(!nome){ showToast("Dê um nome ao objetivo."); return; }
+      if(!editing && state.salarioAtual<=0 && modoAtual!=="fixo"){ showToast("Cadastre o salário atual primeiro (tela Início)."); return; }
+      if(!fim || fim <= inicio){ showToast("Verifique as datas de início e fim."); return; }
+
+      let payload = { nome, destino, modo: modoAtual, dataInicio: inicio, dataFim: fim, mensagemFutura: mensagemInput.value.trim() };
+      if(modoAtual==="fixo"){
+        const vf = parseFloat(valorFixoInput.value); const tx = parseFloat(taxaFixoInput.value);
+        if(isNaN(vf)||vf<=0){ showToast("Informe um valor fixo válido."); return; }
+        if(isNaN(tx)||tx<0){ showToast("Informe uma taxa de juros válida."); return; }
+        payload.valorFixo = vf; payload.taxaMulta = tx;
+      } else {
+        const p = parseFloat(percentualInput.value); const tx = parseFloat(taxaInput.value);
+        if(isNaN(p)||p<=0){ showToast("Informe um percentual válido."); return; }
+        if(isNaN(tx)||tx<0){ showToast("Informe uma taxa de juros válida."); return; }
+        payload.percentual = p; payload.taxaMulta = tx;
+      }
+
+      if(editing){ updateGoal(g, payload); showToast("Objetivo atualizado."); navegarDireto({type:"goal", id:g.id}); return; }
+      else{ const ng = addGoal(payload); showToast("Objetivo criado."); navegarDireto({type:"goal", id:ng.id}); return; }
+      render();
+    };
+
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  // ----- View: Novo Aporte (manual / retroativo) -----
+  function viewNovoAporte(){
+    const wrap = el(`<div></div>`);
+    wrap.appendChild(el(`<h1 class="page-title">Novo aporte</h1><div class="subtitle">Registre um aporte manualmente — inclusive de dias anteriores, se você esqueceu de fazer o check-in ou já vinha guardando antes de cadastrar a cápsula aqui.</div>`));
+
+    if(state.goals.length===0){
+      wrap.appendChild(el(`<div class="empty">Cadastre um objetivo primeiro em "+ Novo objetivo".</div>`));
+      return wrap;
+    }
+
+    const card = el(`<div class="card">
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Objetivo</label>
+          <select id="na-objetivo" style="font-family:ui-monospace,monospace; font-size:15px; padding:9px 10px; border:1px solid var(--line); border-radius:4px; background:#fffdf7; color:var(--ink); width:100%;">
+            ${state.goals.map(g=>`<option value="${g.id}">${escapeHtml(g.nome)}</option>`).join("")}
+          </select></div>
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <div class="field"><label>Data do aporte</label><input type="date" id="na-data" value="${todayStr()}" max="${todayStr()}"></div>
+        <div class="field"><label>Valor pago (R$)</label><input type="number" id="na-valor" step="0.01" placeholder="Ex: 50.00"></div>
+      </div>
+      <div id="na-info" class="helptext" style="margin-top:10px;"></div>
+      <div id="na-decisao" style="margin-top:14px;"></div>
+      <div style="margin-top:20px;"><button class="btn-primary" id="na-continuar">Registrar aporte</button></div>
+    </div>`);
+
+    const selectObjetivo = card.querySelector("#na-objetivo");
+    const dataInput = card.querySelector("#na-data");
+    const valorInput = card.querySelector("#na-valor");
+    const infoBox = card.querySelector("#na-info");
+    const decisaoBox = card.querySelector("#na-decisao");
+
+    function goalSelecionado(){ return state.goals.find(g=>g.id===selectObjetivo.value); }
+
+    function atualizarInfo(){
+      const g = goalSelecionado(); if(!g){ infoBox.textContent=""; return; }
+      const date = dataInput.value;
+      if(g.aportes[date]){ infoBox.innerHTML = '⚠ Já existe um aporte registrado nessa data para esta cápsula. Para corrigir, use "editar" no histórico dela.'; return; }
+      if(date < g.dataInicio){
+        infoBox.innerHTML = 'Essa data é <b>anterior ao início</b> registrado da cápsula ('+fmtDate(g.dataInicio)+'). Se você confirmar, o início da cápsula será estendido para '+fmtDate(date)+', e os dias entre essa data e o início antigo passam a ser obrigatórios (entram como pendentes).';
+      } else {
+        const dentroDoPlano = date <= g.dataFim;
+        if(!dentroDoPlano){ infoBox.innerHTML = '⚠ Essa data é posterior ao fim da cápsula ('+fmtDate(g.dataFim)+'). Ajuste a data final editando o objetivo, se quiser incluir esse dia.'; return; }
+        const jaVencido = date <= todayStr();
+        const info = jaVencido ? devidoAtual(g, date) : { valor: valorDiarioBase(g), diasAtraso:0, base: valorDiarioBase(g) };
+        infoBox.innerHTML = 'Valor esperado para '+fmtDate(date)+': <b>'+fmtMoney(info.valor)+'</b>'+(info.diasAtraso>0?' (já com juros de '+info.diasAtraso+' dia(s) de atraso)':'')+'.';
+      }
+    }
+    selectObjetivo.onchange = atualizarInfo;
+    dataInput.onchange = atualizarInfo;
+    atualizarInfo();
+
+    card.querySelector("#na-continuar").onclick = () => {
+      const g = goalSelecionado();
+      const date = dataInput.value;
+      const valor = parseFloat(valorInput.value);
+      decisaoBox.innerHTML = "";
+      if(!date){ showToast("Escolha uma data."); return; }
+      if(isNaN(valor)||valor<=0){ showToast("Informe um valor válido."); return; }
+      if(g.aportes[date]){ showToast("Já existe aporte nessa data — edite pelo histórico da cápsula."); return; }
+      if(date > g.dataFim){ showToast("Essa data é posterior ao fim da cápsula. Edite a data final do objetivo primeiro."); return; }
+
+      // Caso 1: data anterior ao início registrado -> estende o início
+      if(date < g.dataInicio){
+        if(!confirm("Confirmar? O início da cápsula será estendido para "+fmtDate(date)+", e os dias entre essa data e "+fmtDate(g.dataInicio)+" passam a ser obrigatórios.")) return;
+        const base = valorDiarioBase(g);
+        g.dataInicio = date;
+        registrarAporteExato(g, date, valor, 0, base);
+        saveState(); showToast("Início da cápsula estendido e aporte registrado."); navegarDireto({type:"goal", id:g.id});
+        return;
+      }
+
+      // Caso 2: data dentro do plano (vencida ou futura)
+      const jaVencido = date <= todayStr();
+      const info = jaVencido ? devidoAtual(g, date) : { valor: valorDiarioBase(g), diasAtraso:0, base: valorDiarioBase(g) };
+      const excedente = valor - info.valor;
+
+      if(excedente <= 0.01){
+        registrarAporteExato(g, date, valor, info.diasAtraso, info.base);
+        saveState(); showToast("Aporte registrado."); navegarDireto({type:"goal", id:g.id});
+        return;
+      }
+
+      // Excedente: pergunta o que fazer
+      registrarAporteExato(g, date, info.valor, info.diasAtraso, info.base); // grava o dia certo primeiro
+      saveState();
+      const painel = el(`<div class="banner" style="background:var(--paper-dark); border-color:var(--fx-dourado); color:var(--ink);">
+        Você pagou ${fmtMoney(excedente)} a mais do que o esperado para ${fmtDate(date)}. O que fazer com essa diferença?
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn-primary" data-op="bonus">Somar como bônus neste dia</button>
+          <button class="btn-ghost" data-op="diluir">Diluir nas próximas parcelas</button>
+        </div>
+        <div id="na-diluir-opcoes" style="margin-top:14px;"></div>
+      </div>`);
+      painel.querySelector('[data-op="bonus"]').onclick = () => {
+        g.aportes[date].valorPago += excedente; saveState();
+        showToast("Bônus somado ao dia "+fmtDate(date)+"."); navegarDireto({type:"goal", id:g.id});
+      };
+      painel.querySelector('[data-op="diluir"]').onclick = () => {
+        const opcoes = painel.querySelector("#na-diluir-opcoes");
+        const futuras = datasFuturasNaoPagas(g); const pendentes = getPendingDates(g);
+        opcoes.innerHTML = `<div class="helptext" style="margin-bottom:8px;">Como aplicar os ${fmtMoney(excedente)} restantes?</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-ghost" data-modo="continuar">Continuar da última (próximos dias futuros)</button>
+            <button class="btn-ghost" data-modo="retroceder">Retroceder da última (quitar atrasados antigos)</button>
+            <button class="btn-ghost" data-modo="datas">Escolher datas específicas</button>
+          </div>
+          <div id="na-datas-especificas" style="margin-top:12px;"></div>`;
+        opcoes.querySelector('[data-modo="continuar"]').onclick = () => {
+          const restante = distribuirExcedente(g, excedente, "continuar"); saveState();
+          showToast(restante>0.01 ? "Aplicado. Sobraram "+fmtMoney(restante)+" que ficaram como bônus no dia original." : "Excedente aplicado nos próximos dias futuros.");
+          if(restante>0.01){ g.aportes[date].valorPago += restante; saveState(); }
+          navegarDireto({type:"goal", id:g.id});
+        };
+        opcoes.querySelector('[data-modo="retroceder"]').onclick = () => {
+          const restante = distribuirExcedente(g, excedente, "retroceder"); saveState();
+          if(restante>0.01){ g.aportes[date].valorPago += restante; saveState(); }
+          showToast(restante>0.01 ? "Aplicado. Sobraram "+fmtMoney(restante)+" que ficaram como bônus no dia original." : "Excedente aplicado nos dias em atraso.");
+          navegarDireto({type:"goal", id:g.id});
+        };
+        opcoes.querySelector('[data-modo="datas"]').onclick = () => {
+          const todasCandidatas = pendentes.concat(futuras).sort();
+          if(todasCandidatas.length===0){ showToast("Não há dias em aberto para aplicar."); return; }
+          const box = opcoes.querySelector("#na-datas-especificas");
+          box.innerHTML = todasCandidatas.map(d=>{
+            const inf = devidoAtual(g,d);
+            return `<label style="display:flex; align-items:center; gap:8px; padding:5px 0; font-size:13px;"><input type="checkbox" value="${d}"> ${fmtDate(d)} — ${fmtMoney(inf.valor)}</label>`;
+          }).join("") + `<div style="margin-top:10px;"><button class="btn-primary" id="na-aplicar-especificas">Aplicar nas datas marcadas</button></div>`;
+          box.querySelector("#na-aplicar-especificas").onclick = () => {
+            const marcadas = Array.from(box.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
+            if(marcadas.length===0){ showToast("Marque ao menos uma data."); return; }
+            const restante = distribuirExcedente(g, excedente, "datas", marcadas); saveState();
+            if(restante>0.01){ g.aportes[date].valorPago += restante; saveState(); }
+            showToast(restante>0.01 ? "Aplicado. Sobraram "+fmtMoney(restante)+" que ficaram como bônus no dia original." : "Excedente aplicado nas datas escolhidas.");
+            navegarDireto({type:"goal", id:g.id});
+          };
+        };
+      };
+      decisaoBox.appendChild(painel);
+    };
+
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  // ----- Gráfico simples de evolução (SVG) -----
+  function renderEvolutionChart(goal){
+    const meses = {};
+    Object.keys(goal.aportes).sort().forEach(d=>{ const k=d.slice(0,7); meses[k]=(meses[k]||0)+goal.aportes[d].valorPago; });
+    const keys = Object.keys(meses).sort();
+    if(keys.length < 2){ return el('<div class="helptext">Histórico insuficiente para o gráfico (é preciso ter aportes em pelo menos 2 meses diferentes).</div>'); }
+    let cum = 0; const pontos = keys.map(k=>{ cum += meses[k]; return {mes:k, valor:cum}; });
+    const max = Math.max(...pontos.map(p=>p.valor)) || 1;
+    const w = Math.max(360, pontos.length*70), h=150, padBottom=24, padTop=10;
+    const barW = (w/pontos.length)*0.55;
+    let bars = "";
+    pontos.forEach((p,i)=>{
+      const x = (w/pontos.length)*i + (w/pontos.length - barW)/2;
+      const barH = ((h-padBottom-padTop) * (p.valor/max));
+      const y = h - padBottom - barH;
+      const [ano,mes] = p.mes.split("-");
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="var(--brass)" rx="2"></rect>`;
+      bars += `<text x="${x+barW/2}" y="${h-6}" text-anchor="middle" class="chart-bar-label">${MESES[parseInt(mes,10)-1]}/${ano.slice(2)}</text>`;
+    });
+    const svgWrap = el(`<div class="chart-wrap"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bars}</svg></div>`);
+    return svgWrap;
+  }
+
+  function renderComparativoChart(goal){
+    const invs = goal.investimentos||[];
+    if(invs.length===0){ return el('<div class="helptext">Nenhuma migração para investimento registrada ainda — use o botão "Transferir para investimento" abaixo.</div>'); }
+    const eventos = [];
+    Object.keys(goal.aportes).sort().forEach(d=>eventos.push({data:d, tipo:"aporte", valor:goal.aportes[d].valorPago}));
+    invs.forEach(i=>{
+      eventos.push({data:i.data, tipo:"transferencia", valor:i.valor});
+      if(i.resgatado) eventos.push({data:i.dataResgate, tipo:"resgate", valor:i.valorResgate, valorOriginal:i.valor});
+    });
+    eventos.sort((a,b)=> a.data<b.data?-1:(a.data>b.data?1:0));
+    const mesesMap = {};
+    let caixaAcum=0, investAcum=0;
+    eventos.forEach(ev=>{
+      if(ev.tipo==="aporte") caixaAcum += ev.valor;
+      else if(ev.tipo==="transferencia"){ caixaAcum -= ev.valor; investAcum += ev.valor; }
+      else if(ev.tipo==="resgate"){ investAcum -= ev.valorOriginal; caixaAcum += ev.valor; }
+      const k = ev.data.slice(0,7);
+      mesesMap[k] = { caixa: Math.max(0,caixaAcum), invest: Math.max(0,investAcum) };
+    });
+    const keys = Object.keys(mesesMap).sort();
+    const max = Math.max(...keys.map(k=>Math.max(mesesMap[k].caixa, mesesMap[k].invest)), 1);
+    const w = Math.max(360, keys.length*90), h=170, padBottom=26, padTop=14;
+    const grupoW = w/keys.length;
+    const barW = grupoW*0.32;
+    let bars="";
+    keys.forEach((k,i)=>{
+      const {caixa,invest} = mesesMap[k];
+      const xBase = grupoW*i;
+      const hCaixa = (h-padBottom-padTop)*(caixa/max);
+      const hInvest = (h-padBottom-padTop)*(invest/max);
+      const x1 = xBase + grupoW*0.12;
+      const x2 = x1 + barW + 6;
+      bars += `<rect x="${x1}" y="${h-padBottom-hCaixa}" width="${barW}" height="${hCaixa}" fill="var(--fx-azul-3)" rx="2"></rect>`;
+      bars += `<rect x="${x2}" y="${h-padBottom-hInvest}" width="${barW}" height="${hInvest}" fill="var(--fx-dourado)" rx="2"></rect>`;
+      const [ano,mes] = k.split("-");
+      bars += `<text x="${xBase+grupoW/2}" y="${h-6}" text-anchor="middle" class="chart-bar-label">${MESES[parseInt(mes,10)-1]}/${ano.slice(2)}</text>`;
+    });
+    const legenda = `<div style="display:flex; gap:16px; font-size:12px; margin-bottom:8px;">
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--fx-azul-3);border-radius:2px;margin-right:5px;"></span>Caixinha (aportes)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--fx-dourado);border-radius:2px;margin-right:5px;"></span>Investido (a custo)</span>
+    </div>`;
+    return el(`<div>${legenda}<div class="chart-wrap"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bars}</svg></div><div class="helptext" style="margin-top:6px;">Compara pelo valor transferido (custo), não pelo valor de mercado histórico — o valor real atualizado aparece na seção Investimentos abaixo.</div></div>`);
+  }
+
+  // ----- View: Detalhe do Objetivo -----
+  function viewGoalDetail(id){
+    const g = state.goals.find(x=>x.id===id);
+    const wrap = el(`<div></div>`);
+    if(!g){ wrap.appendChild(el(`<div class="empty">Objetivo não encontrado.</div>`)); return wrap; }
+
+    const modoLabel = g.modo==="atrelado" ? "atrelado ao salário mínimo" : (g.modo==="congelado" ? "% do salário, congelado" : "valor fixo em R$");
+    const header = el(`<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h1 class="page-title">${escapeHtml(g.nome)} ${g.pausado?'<span class="stamp pausado" style="transform:none;">Pausado</span>':''}</h1>
+        <div class="subtitle">${fmtDate(g.dataInicio)} até ${fmtDate(g.dataFim)} · ${modoLabel}${g.percentual!==null?' · '+g.percentual+'%':''} · juros de ${g.taxaMulta}%/dia em atraso</div>
+        <div class="subtitle" style="margin-top:-6px;">Destino: <b style="color:var(--ink);">${g.destino?escapeHtml(g.destino):'<span style="color:var(--ink-soft);font-weight:400;">não informado</span>'}</b></div>
+      </div>
+      <div style="display:flex; gap:14px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+        <span class="link-danger" id="btn-pdf" style="color:var(--green);">exportar PDF</span>
+        <span class="link-danger" id="btn-pausar" style="color:var(--ink-soft);">${g.pausado?'retomar objetivo':'pausar objetivo'}</span>
+        <span class="link-danger" id="btn-editar" style="color:var(--brass);">editar objetivo</span>
+        <span class="link-danger" id="btn-excluir">excluir objetivo</span>
+      </div>
+    </div>`);
+    header.querySelector("#btn-pdf").onclick = () => exportarPDF(g);
+    header.querySelector("#btn-editar").onclick = () => { goTo({type:"editar", id:g.id}); };
+    header.querySelector("#btn-excluir").onclick = () => {
+      if(confirm('Tem certeza que deseja excluir "'+g.nome+'"? Esta ação não pode ser desfeita.')){
+        state.goals = state.goals.filter(x=>x.id!==id); saveState(); navegarDireto({type:"home"});
+      }
+    };
+    header.querySelector("#btn-pausar").onclick = () => {
+      const acao = g.pausado ? "retomar" : "pausar";
+      if(confirm((g.pausado?'Retomar':'Pausar')+' o objetivo "'+g.nome+'"?'+(g.pausado?' A data final será empurrada pelos dias que ficou pausado.':' Enquanto pausado, não vão aparecer novos check-ins nem juros novos.'))){
+        togglePause(g); showToast("Objetivo "+(g.pausado?"pausado":"retomado")+"."); render();
+      }
+    };
+    wrap.appendChild(header);
+
+    if(isCapsulaConcluida(g)){
+      const diasEmDia = Object.values(g.aportes).filter(a=>a.diasAtraso===0).length;
+      const diasAtrasados = Object.values(g.aportes).filter(a=>a.diasAtraso>0).length;
+      const painel = el(`<div class="capsula-aberta">
+        <div class="selo">Cápsula concluída</div>
+        <h2>🔓 Esta cápsula foi aberta</h2>
+        <div class="capsula-final-grid">
+          <div class="item"><div class="l">Total guardado</div><div class="v" style="color:var(--green);">${fmtMoney(valorAcumulado(g))}</div></div>
+          <div class="item"><div class="l">Tempo total</div><div class="v">${totalDiasPlano(g)} dias</div></div>
+          <div class="item"><div class="l">Aportes em dia</div><div class="v">${diasEmDia}</div></div>
+          <div class="item"><div class="l">Aportes atrasados</div><div class="v" style="color:${diasAtrasados>0?'var(--red)':'var(--ink)'};">${diasAtrasados}</div></div>
+        </div>
+        ${g.mensagemFutura ? `<div class="carta"><div class="carta-titulo">Mensagem que você deixou para este momento</div>${escapeHtml(g.mensagemFutura)}</div>` : `<div class="helptext">Você não deixou nenhuma mensagem para este momento.</div>`}
+      </div>`);
+      wrap.appendChild(painel);
+    }
+
+    const total = totalDiasPlano(g); const feitos = aportesFeitosCount(g); const pend = getPendingDates(g); const acumulado = valorAcumulado(g);
+    const concl = tempoConclusaoLabel(g);
+
+    const stats = el(`<div class="stats-grid" style="display:flex; flex-wrap:nowrap; overflow-x:auto; gap:1px;">
+      <div class="stat" style="flex:1 1 0; min-width:130px;"><div class="label">Valor de hoje</div><div class="value ${pend.length>0?'red':''}">${g.pausado?'—':(pend.length>0 ? fmtMoney(devidoAtual(g,pend[0]).valor) : fmtMoney(valorDiarioBase(g)))}</div></div>
+      <div class="stat" style="flex:1 1 0; min-width:130px;"><div class="label">Acumulado</div><div class="value green">${fmtMoney(acumulado)}</div></div>
+      <div class="stat" style="flex:1 1 0; min-width:130px;"><div class="label">Projeção final (hoje)</div><div class="value brass">${fmtMoney(projecaoFinal(g))}</div></div>
+      <div class="stat" style="flex:1 1 0; min-width:110px;"><div class="label">Tempo investido</div><div class="value">${tempoInvestidoDias(g)}d</div></div>
+      <div class="stat" style="flex:1 1 0; min-width:130px;"><div class="label">Para conclusão</div><div class="value">${concl.texto.replace(' para conclusão','')}</div></div>
+      <div class="stat" style="flex:1 1 0; min-width:120px;"><div class="label">Aportes (Total/Atual)</div><div class="value">${fmtFracao(total,feitos)}</div></div>
+    </div>`);
+    wrap.appendChild(stats);
+
+    if(pend.length>0 && !g.pausado){
+      const primeiro = pend[0]; congelarBaseSeNecessario(g, primeiro);
+      const info = devidoAtual(g, primeiro);
+      const severo = info.diasAtraso >= 3;
+      if(severo){ wrap.appendChild(el(`<div class="banner">⚠ Este objetivo está com ${info.diasAtraso} dias de atraso — os juros compostos já elevaram o valor devido de ${fmtMoney(info.base)} para ${fmtMoney(info.valor)}.</div>`)); }
+      const checkinCard = el(`<div class="card"><div class="section-title">Check-in pendente</div></div>`);
+      checkinCard.appendChild(renderCheckinItem(g, primeiro));
+      if(pend.length>1){
+        const totalPend = pend.reduce((s,d)=>s+devidoAtual(g,d).valor,0);
+        const linha = el(`<div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="helptext">+ ${pend.length-1} dia(s) mais antigos pendentes, total de ${fmtMoney(totalPend)}.</span>
+          <button class="btn-brass" id="btn-quitar-tudo">Quitar todos (${pend.length})</button>
+        </div>`);
+        linha.querySelector("#btn-quitar-tudo").onclick = () => {
+          if(confirm("Quitar "+pend.length+" aporte(s) pendente(s), totalizando "+fmtMoney(totalPend)+"?")){
+            quitarTodosPendentes(g); showToast("Pendências quitadas."); render();
+          }
+        };
+        checkinCard.appendChild(linha);
+      }
+      wrap.appendChild(checkinCard);
+    }
+
+    // Gráfico de evolução
+    const chartCard = el(`<div class="card"><div class="section-title">Evolução do acumulado</div></div>`);
+    chartCard.appendChild(renderEvolutionChart(g));
+    wrap.appendChild(chartCard);
+
+    const chartCard2 = el(`<div class="card"><div class="section-title">Aportes normais x Investimentos reais</div></div>`);
+    chartCard2.appendChild(renderComparativoChart(g));
+    wrap.appendChild(chartCard2);
+
+    // Seção de Investimentos (migração de capital)
+    const investCard = secaoRecolhivel("invest-"+g.id, "Investimentos", (content)=>{
+      const caixinha = saldoCaixinha(g), investAtivo = valorInvestidoAtivo(g), patrimonio = patrimonioTotal(g);
+      content.innerHTML = `
+        <div class="summary-row" style="margin-bottom:16px;">
+          <div class="summary-item"><div class="label">Saldo em caixinha</div><div class="value" style="color:var(--green);">${fmtMoney(caixinha)}</div></div>
+          <div class="summary-item"><div class="label">Investido (valor atual)</div><div class="value" style="color:var(--fx-dourado-escuro,#a9812e);">${fmtMoney(investAtivo)}</div></div>
+          <div class="summary-item"><div class="label">Patrimônio total</div><div class="value" style="color:var(--fx-azul-1);">${fmtMoney(patrimonio)}</div></div>
+        </div>
+        <div class="section-title" style="font-size:14px;">Transferir para investimento</div>
+        <div class="row">
+          <div class="field"><label>Valor (R$)</label><input type="number" step="0.01" id="inv-valor" placeholder="Ex: 200.00"></div>
+          <div class="field"><label>Data</label><input type="date" id="inv-data" value="${todayStr()}" max="${todayStr()}"></div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <div class="field"><label>Destino</label><input type="text" id="inv-destino" placeholder="Ex: Bitcoin, Binance, CDB Banco X"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="inv-tipo" style="font-family:ui-monospace,monospace; font-size:15px; padding:9px 10px; border:1px solid var(--line); border-radius:4px; background:#fffdf7; color:var(--ink); width:100%;">
+              <option>Cripto</option><option>Renda Fixa</option><option>Ações</option><option>Fundos</option><option>Outro</option>
+            </select></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn-primary" id="inv-transferir">Transferir</button></div>
+        <div id="inv-lista" style="margin-top:20px;"></div>
+      `;
+      content.querySelector("#inv-transferir").onclick = () => {
+        const valor = parseFloat(content.querySelector("#inv-valor").value);
+        const data = content.querySelector("#inv-data").value;
+        const destino = content.querySelector("#inv-destino").value.trim();
+        const tipo = content.querySelector("#inv-tipo").value;
+        if(isNaN(valor)||valor<=0){ showToast("Informe um valor válido."); return; }
+        if(!destino){ showToast("Informe o destino do investimento."); return; }
+        if(valor > caixinha + 0.01){ if(!confirm("Esse valor é maior que o saldo em caixinha atual ("+fmtMoney(caixinha)+"). Transferir mesmo assim?")) return; }
+        transferirParaInvestimento(g, valor, destino, tipo, data, "");
+        showToast("Transferido para investimento."); render();
+      };
+      const lista = content.querySelector("#inv-lista");
+      const todos = (g.investimentos||[]).slice().sort((a,b)=> a.data<b.data?1:-1);
+      if(todos.length===0){
+        lista.innerHTML = '<div class="helptext">Nenhuma transferência registrada ainda.</div>';
+      } else {
+        todos.forEach(inv=>{
+          const atual = inv.valorAtualEstimado!=null?inv.valorAtualEstimado:inv.valor;
+          const ganho = atual - inv.valor;
+          const precisaAtualizar = !inv.resgatado && precisaAtualizarEsteMes(inv);
+          const linha = el(`<div style="padding:12px 0; border-bottom:1px dashed var(--line);">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <div>
+                <b>${escapeHtml(inv.destino)}</b> <span class="helptext" style="display:inline;">(${escapeHtml(inv.tipo)}) · transferido em ${fmtDate(inv.data)}</span>
+                ${inv.resgatado ? '<div class="helptext">Resgatado em '+fmtDate(inv.dataResgate)+' por '+fmtMoney(inv.valorResgate)+'</div>' : ''}
+                ${precisaAtualizar ? '<div style="color:var(--red); font-size:12px; font-weight:700;">⚠ atualização deste mês pendente</div>' : ''}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-family:ui-monospace,monospace;">Transferido: ${fmtMoney(inv.valor)}</div>
+                ${!inv.resgatado ? '<div style="font-family:ui-monospace,monospace; color:'+(ganho>=0?'var(--green)':'var(--red)')+';">Atual: '+fmtMoney(atual)+' ('+(ganho>=0?'+':'')+fmtMoney(ganho)+')</div>' : ''}
+              </div>
+            </div>
+            ${!inv.resgatado ? `<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;">
+              <input type="number" step="0.01" class="inv-novo-valor" placeholder="Novo valor atual" style="width:140px;">
+              <button class="btn-ghost" data-act="atualizar">Atualizar valor</button>
+              <button class="btn-ghost" data-act="resgatar">Resgatar</button>
+              <span class="link-danger" data-act="excluir">excluir</span>
+            </div>` : ''}
+          </div>`);
+          if(!inv.resgatado){
+            linha.querySelector('[data-act="atualizar"]').onclick = () => {
+              const v = parseFloat(linha.querySelector(".inv-novo-valor").value);
+              if(isNaN(v)||v<0){ showToast("Informe um valor válido."); return; }
+              atualizarValorEstimado(g, inv.id, v); showToast("Valor atualizado."); render();
+            };
+            linha.querySelector('[data-act="resgatar"]').onclick = () => {
+              const v = prompt("Valor recebido no resgate (R$):", atual.toFixed(2));
+              if(v===null) return;
+              const vn = parseFloat(v.replace(",","."));
+              if(isNaN(vn)||vn<0){ showToast("Valor inválido."); return; }
+              resgatarInvestimento(g, inv.id, vn); showToast("Investimento resgatado — valor voltou para a caixinha."); render();
+            };
+            linha.querySelector('[data-act="excluir"]').onclick = () => {
+              if(confirm("Excluir esta transferência? O valor volta para a caixinha.")){ excluirInvestimento(g, inv.id); showToast("Transferência excluída."); render(); }
+            };
+          }
+          lista.appendChild(linha);
+        });
+      }
+    });
+    wrap.appendChild(investCard);
+
+    // Histórico
+    const histCard = secaoRecolhivel("hist-"+g.id, "Registro de aportes ("+dates_count(g)+")", (histContent)=>{
+    const dates = Object.keys(g.aportes).sort();
+    if(dates.length===0){
+      histContent.appendChild(el(`<div class="empty" style="padding:24px;">Nenhum aporte registrado ainda.</div>`));
+    } else {
+      const table = el(`<table class="ledger"><thead><tr><th>Data</th><th>Valor base</th><th>Dias atraso</th><th>Valor pago</th><th>Situação</th><th></th></tr></thead><tbody></tbody></table>`);
+      const tbody = table.querySelector("tbody");
+      dates.slice().reverse().forEach(d=>{
+        const a = g.aportes[d];
+        const tr = el(`<tr>
+          <td>${fmtDate(d)}</td><td>${fmtMoney(a.valorBase)}</td><td>${a.diasAtraso}</td><td>${fmtMoney(a.valorPago)}</td>
+          <td>${a.diasAtraso>0 ? '<span class="stamp atraso">Atrasado</span>' : '<span class="stamp pago">Pago</span>'}</td>
+          <td style="white-space:nowrap;"><span class="link-danger" style="color:var(--ink-soft);" data-act="edit">editar</span> · <span class="link-danger" data-act="del">excluir</span></td>
+        </tr>`);
+        tr.querySelector('[data-act="edit"]').onclick = () => {
+          const novo = prompt("Corrigir valor pago em "+fmtDate(d)+":", a.valorPago.toFixed(2));
+          if(novo===null) return;
+          const v = parseFloat(novo.replace(",","."));
+          if(isNaN(v)||v<=0){ showToast("Valor inválido."); return; }
+          editarAporte(g,d,v); showToast("Lançamento corrigido."); render();
+        };
+        tr.querySelector('[data-act="del"]').onclick = () => {
+          if(confirm("Excluir o lançamento de "+fmtDate(d)+"? O dia volta a ficar pendente.")){ excluirAporte(g,d); showToast("Lançamento excluído."); render(); }
+        };
+        tbody.appendChild(tr);
+      });
+      histContent.appendChild(table);
+    }
+    });
+    wrap.appendChild(histCard);
+    return wrap;
+  }
+  function dates_count(g){ return Object.keys(g.aportes).length; }
+
+  render();
+  initFirebase();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js").catch(err=>{
+        console.warn("Service worker não registrado (normal se estiver rodando fora de um servidor/HTTPS):", err.message);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
